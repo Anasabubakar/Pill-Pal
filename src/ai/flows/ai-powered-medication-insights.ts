@@ -13,9 +13,17 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const LogSchema = z.object({
+  medicationName: z.string(),
+  takenAt: z.string().describe("The ISO 8601 timestamp of when the medication was logged."),
+  status: z.enum(['taken', 'missed']),
+  note: z.string().optional(),
+});
+
 const AiMedicationInsightsInputSchema = z.object({
   userId: z.string().describe('The ID of the user.'),
   query: z.string().describe('The user query for medication insights.'),
+  medicationLogs: z.array(LogSchema).describe("The user's medication logs."),
 });
 export type AiMedicationInsightsInput = z.infer<typeof AiMedicationInsightsInputSchema>;
 
@@ -34,13 +42,17 @@ const prompt = ai.definePrompt({
   output: {schema: AiMedicationInsightsOutputSchema},
   prompt: `You are a helpful AI assistant providing insights on medication adherence.
 
-  Analyze the user's medication history and provide personalized suggestions and insights based on their query.
+  Analyze the user's medication history provided below and provide personalized suggestions and insights based on their query.
 
   User ID: {{{userId}}}
   Query: {{{query}}}
-  Medication Logs: (This information would normally be here, but it cannot be accessed within Handlebars.  The LLM will have to respond appropriately without it.  The logs typically contain the medication name, dosage, time, status (taken/missed), and any notes.)
 
-  Provide insights in plain language.`,
+  Medication Logs:
+  {{#each medicationLogs}}
+  - Medication: {{medicationName}}, Status: {{status}}, Time: {{takenAt}}{{#if note}}, Note: {{note}}{{/if}}
+  {{/each}}
+
+  Provide insights in plain language. If the logs are empty, state that you need some data first.`,
 });
 
 const aiMedicationInsightsFlow = ai.defineFlow(

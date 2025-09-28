@@ -8,7 +8,7 @@ import { aiMedicationInsights } from '@/ai/flows/ai-powered-medication-insights'
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { user } from '@/lib/data';
+import { useDataContext } from '@/context/data-context';
 
 type Inputs = {
   query: string;
@@ -18,14 +18,21 @@ export function AIForm() {
   const [insight, setInsight] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { register, handleSubmit, reset } = useForm<Inputs>();
+  const { logs } = useDataContext();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setIsLoading(true);
     setInsight(null);
     try {
+      const formattedLogs = logs.map(log => ({
+        ...log,
+        takenAt: log.takenAt.toISOString(),
+      }));
+      
       const result = await aiMedicationInsights({
         userId: 'user-123',
         query: data.query,
+        medicationLogs: formattedLogs,
       });
       setInsight(result.insights);
     } catch (error) {
