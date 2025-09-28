@@ -20,38 +20,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = getAuth(app);
 
   useEffect(() => {
-    // First, check for redirect result
-    getRedirectResult(auth)
-      .then((result) => {
+    const processAuth = async () => {
+      try {
+        const result = await getRedirectResult(auth);
         if (result) {
-          // If we get a result, a user has just signed in.
-          // onAuthStateChanged will handle the user state update.
-          // We can force a redirect to the dashboard.
+          // User has just signed in via redirect.
+          // onAuthStateChanged will handle setting the user state.
+          // We can navigate to the dashboard immediately.
           router.push('/dashboard');
         }
-      })
-      .catch((error) => {
-        // Handle Errors here.
-        console.error("Error during redirect result:", error);
-      })
-      .finally(() => {
-        // Now, set up the auth state listener
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-          setUser(currentUser);
-          setLoading(false);
-          
-          const isAuthPage = pathname === '/login' || pathname === '/signup';
+      } catch (error) {
+        console.error("Error processing redirect result:", error);
+      }
 
-          if (!currentUser && !isAuthPage) {
-            router.push('/login');
-          }
-          if (currentUser && isAuthPage) {
-            router.push('/dashboard');
-          }
-        });
+      // After processing redirect, set up the normal auth state listener.
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setLoading(false);
         
-        return () => unsubscribe();
+        const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+        if (!currentUser && !isAuthPage) {
+          router.push('/login');
+        } else if (currentUser && isAuthPage) {
+          router.push('/dashboard');
+        }
       });
+      
+      return unsubscribe;
+    };
+    
+    processAuth();
   }, [auth, router, pathname]);
 
   return (
