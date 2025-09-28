@@ -40,6 +40,9 @@ export function SidebarNav() {
   };
 
   const getInitials = (email: string) => {
+    if (user?.displayName) {
+        return user.displayName.charAt(0).toUpperCase();
+    }
     return email.charAt(0).toUpperCase();
   }
 
@@ -72,7 +75,8 @@ export function SidebarNav() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-3 w-full justify-start h-auto p-0">
                <Avatar>
-                <AvatarFallback>{user ? getInitials(user.email!) : 'U'}</AvatarFallback>
+                 <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} />
+                 <AvatarFallback>{user ? getInitials(user.email!) : 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start overflow-hidden">
                 <span className="font-medium truncate max-w-[150px]">
