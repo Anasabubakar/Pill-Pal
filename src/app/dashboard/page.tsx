@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MedicationSchedule } from '@/components/medication-schedule';
 import { AddMedicationDialog } from '@/components/medication-dialogs';
-import { DataProvider } from '@/context/data-context';
 
 export default function DashboardPage() {
   const today = new Date();
 
   return (
-    <DataProvider>
+    <>
       <PageHeader
         title="Dashboard"
         description={`Hello Alex, here is your medication schedule for today, ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.`}
@@ -54,6 +53,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </DataProvider>
+    </>
   );
 }
