@@ -1,14 +1,15 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Pill, ClipboardList, Users, Sparkles, LogOut } from 'lucide-react';
-
+import { getAuth, signOut } from 'firebase/auth';
+import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { user } from '@/lib/data';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -20,6 +21,18 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const auth = getAuth();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  const getInitials = (email: string) => {
+    return email.charAt(0).toUpperCase();
+  }
 
   return (
     <aside className="w-64 flex-col border-r bg-card p-4 hidden md:flex">
@@ -48,16 +61,15 @@ export function SidebarNav() {
         <Separator className="my-4" />
         <div className="flex items-center gap-3">
           <Avatar>
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{user ? getInitials(user.email!) : 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-medium">{user.name}</span>
-            <span className="text-xs text-muted-foreground">{user.email}</span>
+            <span className="font-medium">{loading ? 'Loading...' : user?.displayName || user?.email}</span>
+            <span className="text-xs text-muted-foreground">{loading ? '' : 'user'}</span>
           </div>
-          <button className="ml-auto p-2 rounded-md hover:bg-accent/50">
+          <Button variant="ghost" size="icon" className="ml-auto" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
       </div>
     </aside>
