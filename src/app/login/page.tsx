@@ -45,7 +45,6 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
   const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setError(null);
@@ -59,6 +58,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    const provider = new GoogleAuthProvider();
     try {
       await signInWithRedirect(auth, provider);
     } catch (err: any) {

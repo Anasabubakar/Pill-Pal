@@ -21,37 +21,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const processAuth = async () => {
+      setLoading(true);
       try {
         const result = await getRedirectResult(auth);
         if (result) {
           // User has just signed in via redirect.
-          // onAuthStateChanged will handle setting the user state.
           // We can navigate to the dashboard immediately.
+          // onAuthStateChanged will still fire and set the user state.
           router.push('/dashboard');
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
-
-      // After processing redirect, set up the normal auth state listener.
+      
       const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         setUser(currentUser);
         setLoading(false);
         
         const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-        if (!currentUser && !isAuthPage) {
-          router.push('/login');
-        } else if (currentUser && isAuthPage) {
-          router.push('/dashboard');
+        if (currentUser) {
+          if (isAuthPage) {
+            router.push('/dashboard');
+          }
+        } else {
+          if (!isAuthPage) {
+            router.push('/login');
+          }
         }
       });
       
-      return unsubscribe;
+      return () => unsubscribe();
     };
     
     processAuth();
-  }, [auth, router, pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
