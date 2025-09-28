@@ -49,24 +49,28 @@ export const medications: Medication[] = [
 export const logs: Log[] = [
   {
     id: 'log1',
+    medicationId: 'med1',
     medicationName: 'Lisinopril',
     takenAt: new Date(new Date().setHours(8, 2, 0, 0)),
     status: 'taken',
   },
   {
     id: 'log2',
+    medicationId: 'med2',
     medicationName: 'Metformin',
     takenAt: new Date(new Date().setHours(9, 5, 0, 0)),
     status: 'taken',
   },
     {
     id: 'log3',
+    medicationId: 'med3',
     medicationName: 'Vitamin D3',
     takenAt: new Date(new Date().setHours(9, 5, 0, 0)),
     status: 'taken',
   },
   {
     id: 'log4',
+    medicationId: 'med1',
     medicationName: 'Lisinopril',
     takenAt: new Date(new Date().setDate(new Date().getDate() - 1)),
     status: 'missed',

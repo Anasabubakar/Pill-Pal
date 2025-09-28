@@ -11,6 +11,7 @@ export type Medication = {
 
 export type Log = {
   id: string;
+  medicationId: string;
   medicationName: string;
   takenAt: Date;
   status: 'taken' | 'missed';

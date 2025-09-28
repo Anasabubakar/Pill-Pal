@@ -1,21 +1,45 @@
 "use client"
 
 import { Clock, CheckCircle2, Pill } from 'lucide-react';
+import { useDataContext } from '@/context/data-context';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import type { Medication } from '@/lib/types';
 
-interface MedicationScheduleProps {
-  medications: Medication[];
-}
+export function MedicationSchedule() {
+  const { todaysMedications, logs, addLog } = useDataContext();
 
-export function MedicationSchedule({ medications }: MedicationScheduleProps) {
+  const isTaken = (medId: string, time: string) => {
+    const today = new Date();
+    return logs.some(log => 
+      log.medicationId === medId &&
+      log.takenAt.getHours() === parseInt(time.split(':')[0]) &&
+      log.takenAt.getMinutes() === parseInt(time.split(':')[1]) &&
+      log.takenAt.toDateString() === today.toDateString() &&
+      log.status === 'taken'
+    );
+  };
+
+  const handleTakeMedication = (medId: string, medName: string, time: string, taken: boolean) => {
+    if (taken) {
+      const takenAt = new Date();
+      const [hours, minutes] = time.split(':');
+      takenAt.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      addLog({
+        medicationId: medId,
+        medicationName: medName,
+        takenAt: takenAt,
+        status: 'taken',
+      });
+    }
+    // In a real app, you might want to handle un-checking (e.g., deleting the log)
+  };
+
   return (
     <div className="space-y-4">
-      {medications.map((med) => (
+      {todaysMedications.map((med) => (
         <Card key={med.id} className="bg-card shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -38,7 +62,11 @@ export function MedicationSchedule({ medications }: MedicationScheduleProps) {
                     <span className="text-lg font-medium">{time}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                     <Checkbox id={`${med.id}-${time}`} />
+                     <Checkbox 
+                        id={`${med.id}-${time}`} 
+                        checked={isTaken(med.id, time)}
+                        onCheckedChange={(checked) => handleTakeMedication(med.id, med.name, time, !!checked)}
+                     />
                      <Label htmlFor={`${med.id}-${time}`} className="text-base">Taken</Label>
                   </div>
                 </div>
@@ -47,7 +75,7 @@ export function MedicationSchedule({ medications }: MedicationScheduleProps) {
           </CardContent>
         </Card>
       ))}
-       {medications.length === 0 && (
+       {todaysMedications.length === 0 && (
          <Card className="flex flex-col items-center justify-center p-10 border-dashed">
             <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
             <h3 className="text-xl font-bold font-headline">All Clear!</h3>

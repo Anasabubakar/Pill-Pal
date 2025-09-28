@@ -5,28 +5,30 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MedicationSchedule } from '@/components/medication-schedule';
-import { medications } from '@/lib/data';
+import { AddMedicationDialog } from '@/components/medication-dialogs';
+import { DataProvider } from '@/context/data-context';
 
 export default function DashboardPage() {
   const today = new Date();
-  const todaysMedications = medications.filter(med => med.status === 'active' && med.startDate <= today && (!med.endDate || med.endDate >= today));
 
   return (
-    <>
+    <DataProvider>
       <PageHeader
         title="Dashboard"
         description={`Hello Alex, here is your medication schedule for today, ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.`}
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Medication
-        </Button>
+        <AddMedicationDialog>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Medication
+          </Button>
+        </AddMedicationDialog>
       </PageHeader>
       <div className="flex-1 overflow-auto p-6 bg-background/50">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold font-headline mb-4">Today's Schedule</h2>
-            <MedicationSchedule medications={todaysMedications} />
+            <MedicationSchedule />
           </div>
           <div>
             <h2 className="text-2xl font-bold font-headline mb-4">AI Insights</h2>
@@ -52,6 +54,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </>
+    </DataProvider>
   );
 }

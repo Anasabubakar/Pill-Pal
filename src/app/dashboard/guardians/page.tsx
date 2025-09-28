@@ -1,3 +1,4 @@
+'use client';
 import { Send, UserPlus } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
@@ -8,9 +9,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { guardians } from '@/lib/data';
+import { useDataContext } from '@/context/data-context';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import type { Guardian } from '@/lib/types';
+
+type Inputs = {
+  email: string;
+  viewLogs: boolean;
+  receiveAlerts: boolean;
+};
 
 export default function GuardiansPage() {
+  const { guardians, addGuardian } = useDataContext();
+  const { register, handleSubmit, reset } = useForm<Inputs>();
+  
+  const onSubmit: SubmitHandler<Inputs> = (data) => {
+    const permissions: ('viewLogs' | 'receiveAlerts')[] = [];
+    if (data.viewLogs) permissions.push('viewLogs');
+    if (data.receiveAlerts) permissions.push('receiveAlerts');
+
+    const newGuardian: Omit<Guardian, 'id'> = {
+      email: data.email,
+      permissions,
+      status: 'pending',
+    };
+    addGuardian(newGuardian);
+    reset();
+  };
+
   return (
     <>
       <PageHeader
@@ -29,20 +55,20 @@ export default function GuardiansPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Guardian's Email</Label>
-                <Input id="email" type="email" placeholder="guardian@example.com" />
+                <Input id="email" type="email" placeholder="guardian@example.com" {...register('email', { required: true })}/>
               </div>
               <div className="space-y-2">
                  <Label>Permissions</Label>
                  <div className="flex items-center gap-4">
                     <div className="flex items-center space-x-2">
-                        <Checkbox id="viewLogs" defaultChecked/>
+                        <Checkbox id="viewLogs" {...register('viewLogs')} defaultChecked/>
                         <Label htmlFor="viewLogs">View Logs</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Checkbox id="receiveAlerts" />
+                        <Checkbox id="receiveAlerts" {...register('receiveAlerts')} />
                         <Label htmlFor="receiveAlerts">Receive Alerts</Label>
                     </div>
                  </div>
