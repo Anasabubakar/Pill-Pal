@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, getRedirectResult, type User } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -20,21 +20,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = getAuth(app);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-      
-      const isAuthPage = pathname === '/login' || pathname === '/signup';
+    // First, check for redirect result
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          // If we get a result, a user has just signed in.
+          // onAuthStateChanged will handle the user state update.
+          // We can force a redirect to the dashboard.
+          router.push('/dashboard');
+        }
+      })
+      .catch((error) => {
+        // Handle Errors here.
+        console.error("Error during redirect result:", error);
+      })
+      .finally(() => {
+        // Now, set up the auth state listener
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setLoading(false);
+          
+          const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-      if (!user && !isAuthPage) {
-        router.push('/login');
-      }
-      if (user && isAuthPage) {
-        router.push('/dashboard');
-      }
-    });
-
-    return () => unsubscribe();
+          if (!currentUser && !isAuthPage) {
+            router.push('/login');
+          }
+          if (currentUser && isAuthPage) {
+            router.push('/dashboard');
+          }
+        });
+        
+        return () => unsubscribe();
+      });
   }, [auth, router, pathname]);
 
   return (
