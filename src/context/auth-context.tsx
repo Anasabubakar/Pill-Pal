@@ -20,47 +20,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = getAuth(app);
 
   useEffect(() => {
-    const processAuth = async () => {
-      setLoading(true);
-      try {
-        const result = await getRedirectResult(auth);
+    // This flag helps prevent race conditions
+    let isProcessingRedirect = true;
+
+    getRedirectResult(auth)
+      .then((result) => {
         if (result) {
-          // User has just signed in via redirect.
-          // We can navigate to the dashboard immediately.
-          // onAuthStateChanged will still fire and set the user state.
+          // A user has just signed in via redirect.
+          // onAuthStateChanged will handle setting the user and redirecting.
+          console.log('Redirect result processed.');
+        }
+      })
+      .catch((error) => {
+        console.error("Error processing redirect result:", error);
+      })
+      .finally(() => {
+        isProcessingRedirect = false;
+        // Trigger a state update if needed, though onAuthStateChanged should handle it.
+        setLoading(false); 
+      });
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      
+      // Only set loading to false after the first auth state check completes.
+      if (!isProcessingRedirect) {
+        setLoading(false);
+      }
+
+      const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+      if (currentUser) {
+        if (isAuthPage) {
           router.push('/dashboard');
         }
-      } catch (error) {
-        console.error("Error processing redirect result:", error);
-      }
-      
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setLoading(false);
-        
-        const isAuthPage = pathname === '/login' || pathname === '/signup';
-
-        if (currentUser) {
-          if (isAuthPage) {
-            router.push('/dashboard');
-          }
-        } else {
-          if (!isAuthPage) {
-            router.push('/login');
-          }
+      } else {
+        if (!isAuthPage) {
+          router.push('/login');
         }
-      });
-      
-      return () => unsubscribe();
-    };
-    
-    processAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth]);
+      }
+    });
 
+    return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, router]); // Added router to dependency array
+
+  // Show a loading indicator while processing auth state or redirect.
+  const isPotentiallyAuthenticating = loading || pathname === '/login' || pathname === '/signup';
+
+  if (isPotentiallyAuthenticating && loading) {
+     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
   return (
     <AuthContext.Provider value={{ user, loading }}>
-      {loading ? <div className="flex items-center justify-center min-h-screen">Loading...</div> : children}
+      {children}
     </AuthContext.Provider>
   );
 }
