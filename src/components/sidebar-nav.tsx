@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Pill, ClipboardList, Users, Sparkles, LogOut } from 'lucide-react';
+import { LayoutDashboard, Pill, ClipboardList, Users, Sparkles, LogOut, Settings } from 'lucide-react';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,15 @@ import { Logo } from '@/components/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -59,18 +68,43 @@ export function SidebarNav() {
       </nav>
       <div className="mt-auto">
         <Separator className="my-4" />
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarFallback>{user ? getInitials(user.email!) : 'U'}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="font-medium">{loading ? 'Loading...' : user?.displayName || user?.email}</span>
-            <span className="text-xs text-muted-foreground">{loading ? '' : 'user'}</span>
-          </div>
-          <Button variant="ghost" size="icon" className="ml-auto" onClick={handleLogout}>
-            <LogOut className="h-5 w-5" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-3 w-full justify-start h-auto p-0">
+               <Avatar>
+                <AvatarFallback>{user ? getInitials(user.email!) : 'U'}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start overflow-hidden">
+                <span className="font-medium truncate max-w-[150px]">
+                  {loading ? 'Loading...' : user?.displayName || user?.email}
+                </span>
+                <span className="text-xs text-muted-foreground">{loading ? '' : 'user'}</span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                   {loading ? 'Loading...' : user?.displayName || 'User'}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {loading ? '' : user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );
