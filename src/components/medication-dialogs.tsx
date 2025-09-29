@@ -22,14 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDataContext } from '@/context/data-context';
 import type { Medication } from '@/lib/types';
 
-const imageSchema = z.instanceof(FileList).optional();
-
 const medicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   dosage: z.string().min(1, 'Dosage is required'),
   times: z.string().min(1, 'At least one time is required'),
   repeat: z.enum(['daily', 'weekly', 'custom']),
-  image: imageSchema,
 });
 
 type MedicationFormData = z.infer<typeof medicationSchema>;
@@ -53,18 +50,16 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
     });
 
     const onSubmit: SubmitHandler<MedicationFormData> = async (data) => {
-        const { image, ...medicationData } = data;
-        
         const medicationPayload = {
-            ...medicationData,
+            ...data,
             times: data.times.split(',').map(t => t.trim()).filter(Boolean),
         };
 
         try {
             if (medication) {
-                await updateMedication({ ...medication, ...medicationPayload }, image);
+                await updateMedication({ ...medication, ...medicationPayload });
             } else {
-                await addMedication({ ...medicationPayload, image });
+                await addMedication(medicationPayload);
             }
             setOpen(false);
         } catch (error) {
@@ -118,10 +113,6 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                                     </Select>
                                 )}
                             />
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="image" className="text-right">Image</Label>
-                            <Input id="image" type="file" {...register('image')} className="col-span-3" />
                         </div>
                     </div>
                     <DialogFooter>

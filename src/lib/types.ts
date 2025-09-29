@@ -9,8 +9,6 @@ export type Medication = {
   startDate: Date;
   endDate?: Date;
   status: 'active' | 'inactive';
-  imageUrl?: string;
-  imagePath?: string;
 };
 
 export type Log = {
