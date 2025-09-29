@@ -66,6 +66,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             setOpen(false);
         } catch (error) {
             console.error("Failed to save medication:", error);
+            // Optionally, show an error toast to the user
         }
     };
 
@@ -84,17 +85,17 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="name" className="text-right">Name</Label>
                             <Input id="name" {...register('name')} className="col-span-3" />
-                            {errors.name && <p className="col-span-4 text-red-500 text-xs text-right">{errors.name.message}</p>}
+                            {errors.name && <p className="col-span-4 text-destructive text-xs text-right">{errors.name.message}</p>}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="dosage" className="text-right">Dosage</Label>
                             <Input id="dosage" {...register('dosage')} className="col-span-3" />
-                            {errors.dosage && <p className="col-span-4 text-red-500 text-xs text-right">{errors.dosage.message}</p>}
+                            {errors.dosage && <p className="col-span-4 text-destructive text-xs text-right">{errors.dosage.message}</p>}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="times" className="text-right">Times</Label>
                             <Input id="times" {...register('times')} placeholder="e.g. 08:00, 20:00" className="col-span-3" />
-                            {errors.times && <p className="col-span-4 text-red-500 text-xs text-right">{errors.times.message}</p>}
+                            {errors.times && <p className="col-span-4 text-destructive text-xs text-right">{errors.times.message}</p>}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="repeat" className="text-right">Repeat</Label>
