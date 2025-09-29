@@ -56,7 +56,7 @@ export default function SignupPage() {
     setError(null);
     try {
       await createUserWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/dashboard');
+      // AuthProvider will handle the redirect
     } catch (err: any) {
       setError(err.message);
     }

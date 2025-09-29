@@ -50,7 +50,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/dashboard');
+      // AuthProvider will handle the redirect
     } catch (err: any) {
       setError(err.message);
     }
