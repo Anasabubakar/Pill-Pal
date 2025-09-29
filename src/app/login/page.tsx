@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -27,7 +28,11 @@ export default function LoginPage() {
     setError(null);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      if (!userCredential.user.emailVerified) {
+      // Force a reload of the user's profile to get the latest emailVerified state
+      await userCredential.user.reload();
+      const freshUser = auth.currentUser;
+
+      if (!freshUser?.emailVerified) {
         router.push(`/verify-email?email=${data.email}`);
         return;
       }
