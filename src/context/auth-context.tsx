@@ -12,6 +12,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const publicRoutes = ['/login', '/signup', '/verify-email'];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,19 +33,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
+    const isPublicPage = publicRoutes.includes(pathname);
 
-    if (user && isAuthPage) {
-      router.push('/dashboard');
-    }
-
-    if (!user && !isAuthPage) {
-      router.push('/login');
+    if (user) {
+      if (!user.emailVerified && pathname !== '/verify-email') {
+        router.push(`/verify-email?email=${user.email}`);
+      } else if (user.emailVerified && isPublicPage) {
+        router.push('/dashboard');
+      }
+    } else {
+      if (!isPublicPage) {
+        router.push('/login');
+      }
     }
   }, [user, loading, pathname, router]);
 
-
   if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  // Prevent dashboard flicker for unverified users
+  if (user && !user.emailVerified && pathname !== '/verify-email') {
+     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  // Prevent dashboard flicker for logged-in users on public pages
+  if (user && user.emailVerified && publicRoutes.includes(pathname)) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 

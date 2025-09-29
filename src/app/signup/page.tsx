@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -49,7 +49,8 @@ export default function SignupPage() {
       await updateProfile(userCredential.user, {
         displayName: `${data.firstName} ${data.lastName}`,
       });
-      router.push('/dashboard');
+      await sendEmailVerification(userCredential.user);
+      router.push(`/verify-email?email=${data.email}`);
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('This email is already registered. Please login.');

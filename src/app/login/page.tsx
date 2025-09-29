@@ -26,7 +26,11 @@ export default function LoginPage() {
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      if (!userCredential.user.emailVerified) {
+        router.push(`/verify-email?email=${data.email}`);
+        return;
+      }
       router.push('/dashboard');
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
