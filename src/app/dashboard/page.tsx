@@ -1,3 +1,6 @@
+
+'use client';
+
 import Link from 'next/link';
 import { PlusCircle, Sparkles } from 'lucide-react';
 
@@ -6,15 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MedicationSchedule } from '@/components/medication-schedule';
 import { AddMedicationDialog } from '@/components/medication-dialogs';
+import { useAuth } from '@/context/auth-context';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const today = new Date();
+
+  const firstName = user?.displayName?.split(' ')[0] || 'there';
 
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description={`Hello Alex, here is your medication schedule for today, ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.`}
+        description={`Hello ${firstName}, here is your medication schedule for today, ${today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}.`}
       >
         <AddMedicationDialog>
           <Button>
