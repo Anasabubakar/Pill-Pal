@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuth, sendEmailVerification, signOut } from 'firebase/auth';
-import { MailCheck } from 'lucide-react';
+import { MailCheck, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,25 @@ function VerifyEmailContent() {
   const email = searchParams.get('email');
   const auth = getAuth(app);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+          clearInterval(interval);
+          toast({
+            title: 'Email Verified!',
+            description: 'Redirecting you to the dashboard...',
+          });
+          router.push('/dashboard');
+        }
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [auth, router, toast]);
+
 
   const handleResend = async () => {
     if (auth.currentUser) {
@@ -48,6 +67,10 @@ function VerifyEmailContent() {
           <CardDescription className="text-center">
             A verification link has been sent to <span className="font-bold">{email}</span>. Please check your inbox and follow the link to activate your account.
           </CardDescription>
+           <div className="flex items-center text-sm text-muted-foreground pt-2">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Waiting for verification...</span>
+            </div>
         </CardHeader>
         <CardContent className="grid gap-4">
           <p className="text-center text-sm text-muted-foreground">
