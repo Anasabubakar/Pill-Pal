@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getAuth, updateProfile, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
+import { getAuth, updateProfile, reauthenticateWithCredential, EmailAuthProvider, updatePassword, type AuthError } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +21,7 @@ const profileSchema = z.object({
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters long.'),
     confirmPassword: z.string(),
 }).refine(data => data.newPassword === data.confirmPassword, {
     message: 'New passwords do not match',
@@ -72,13 +72,28 @@ export function SettingsForm() {
         await updatePassword(user, data.newPassword);
         toast({ title: 'Success', description: 'Your password has been changed.' });
         passwordForm.reset();
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
-        if (error.code === 'auth/wrong-password') {
-             toast({ title: 'Error', description: 'Incorrect current password.', variant: 'destructive' });
-        } else {
-            toast({ title: 'Error', description: 'Failed to change password.', variant: 'destructive' });
+        const authError = error as AuthError;
+        let description = 'An unexpected error occurred. Please try again.';
+
+        switch (authError.code) {
+          case 'auth/wrong-password':
+            description = 'The current password you entered is incorrect. Please try again.';
+            break;
+          case 'auth/weak-password':
+            description = 'The new password is too weak. Please choose a stronger password.';
+            break;
+          case 'auth/requires-recent-login':
+             description = 'For security, please log out and log back in before changing your password.';
+             break;
         }
+
+        toast({
+          title: 'Error updating password',
+          description,
+          variant: 'destructive',
+        });
     }
   };
 
