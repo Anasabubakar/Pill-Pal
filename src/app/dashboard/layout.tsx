@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { SidebarNav, navItems } from '@/components/sidebar-nav';
 import { DataProvider } from '@/context/data-context';
 import { AuthProvider } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { Logo } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +23,7 @@ function MobileNav() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 bg-card p-4">
+         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
          <div className="flex items-center gap-2 pb-4 border-b mb-4">
             <Logo className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline text-primary">Pill Pal</h1>
