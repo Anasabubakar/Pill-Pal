@@ -99,49 +99,57 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addMedication = async (med: MedicationInput) => {
     if (!user) return;
-    
-    let imageInfo: { imageUrl?: string, imagePath?: string } = {};
-    if (med.image && med.image.length > 0) {
-      imageInfo = await uploadImage(user.uid, med.image[0]);
-    }
-    
+
     const { image, ...medData } = med;
 
-    const newMed = {
+    // Create the initial document without image info
+    const newMedData = {
       ...medData,
-      ...imageInfo,
       userId: user.uid,
       status: 'active',
       startDate: new Date(),
+      imageUrl: '', 
+      imagePath: '',
     };
-    await addDoc(collection(db, `users/${user.uid}/medications`), newMed);
+    const docRef = await addDoc(collection(db, `users/${user.uid}/medications`), newMedData);
+
+    // If there's an image, upload it and then update the document
+    if (image && image.length > 0) {
+      uploadImage(user.uid, image[0]).then(imageInfo => {
+        updateDoc(docRef, imageInfo);
+      }).catch(error => {
+        console.error("Image upload failed:", error);
+        // Optionally, delete the created medication doc or mark it as errored
+      });
+    }
   };
+
 
   const updateMedication = async (updatedMed: Medication, newImage?: FileList) => {
-    if (!user) return;
+     if (!user) return;
     const { id, ...medData } = updatedMed;
+    const docRef = doc(db, `users/${user.uid}/medications`, id);
 
-    let imageInfo: { imageUrl?: string, imagePath?: string } = {
-        imageUrl: medData.imageUrl,
-        imagePath: medData.imagePath,
-    };
+    // First, update the non-image data
+    await updateDoc(docRef, medData);
 
+    // Then, handle image upload if a new one is provided
     if (newImage && newImage.length > 0) {
-      // If there's an old image, delete it
+      // Delete the old image if it exists
       if (medData.imagePath) {
         const oldImageRef = ref(storage, medData.imagePath);
-        await deleteObject(oldImageRef).catch(e => console.error("Error deleting old image:", e));
+        deleteObject(oldImageRef).catch(e => console.error("Error deleting old image:", e));
       }
-      imageInfo = await uploadImage(user.uid, newImage[0]);
+      
+      // Upload the new image and update the doc with the new URLs
+      uploadImage(user.uid, newImage[0]).then(imageInfo => {
+        updateDoc(docRef, imageInfo);
+      }).catch(error => {
+        console.error("Image upload failed:", error);
+      });
     }
-    
-    const finalMedData = {
-        ...medData,
-        ...imageInfo,
-    };
-    
-    await updateDoc(doc(db, `users/${user.uid}/medications`, id), finalMedData);
   };
+
 
   const deleteMedication = async (id: string) => {
     if (!user) return;

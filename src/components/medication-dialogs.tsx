@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -119,6 +120,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                     </div>
                     <DialogFooter>
                         <Button type="submit" disabled={isSubmitting}>
+                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isSubmitting ? 'Saving...' : 'Save changes'}
                         </Button>
                     </DialogFooter>
