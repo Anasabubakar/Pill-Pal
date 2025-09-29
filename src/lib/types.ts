@@ -1,5 +1,7 @@
+
 export type Medication = {
   id: string;
+  userId: string;
   name: string;
   dosage: string;
   times: string[];
@@ -11,6 +13,7 @@ export type Medication = {
 
 export type Log = {
   id: string;
+  userId: string;
   medicationId: string;
   medicationName: string;
   takenAt: Date;
@@ -20,6 +23,7 @@ export type Log = {
 
 export type Guardian = {
   id: string;
+  userId: string;
   email: string;
   permissions: ('viewLogs' | 'receiveAlerts')[];
   status: 'pending' | 'active';
