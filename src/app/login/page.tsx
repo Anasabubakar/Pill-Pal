@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getAuth, signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,25 +20,7 @@ const loginSchema = z.object({
 
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
-function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 48 48" {...props}>
-      <title>Google Logo</title>
-      <clipPath id="g">
-        <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22h-1.5z" />
-      </clipPath>
-      <g clipPath="url(#g)">
-        <path fill="#FBBC05" d="M0 37V11l17 13z" />
-        <path fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z" />
-        <path fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z" />
-        <path fill="#4285F4" d="M48 48L17 24l-4-3 35-10z" />
-      </g>
-    </svg>
-  );
-}
-
 export default function LoginPage() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
@@ -55,17 +36,6 @@ export default function LoginPage() {
       setError(err.message);
     }
   };
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -100,20 +70,6 @@ export default function LoginPage() {
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-           <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-                </span>
-            </div>
-          </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-            <GoogleIcon className="mr-2 h-4 w-4" />
-            Google
-          </Button>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
             <Link href="/signup" className="underline">
