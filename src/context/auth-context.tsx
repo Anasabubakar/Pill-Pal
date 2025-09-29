@@ -23,24 +23,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-
-      const isAuthPage = pathname === '/login' || pathname === '/signup';
-
-      if (currentUser && isAuthPage) {
-        router.push('/dashboard');
-      }
-
-      if (!currentUser && !isAuthPage) {
-        router.push('/login');
-      }
     });
 
     return () => unsubscribe();
-  }, [auth, pathname, router]);
+  }, [auth]);
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  useEffect(() => {
+    if (loading) return;
 
-  if (loading || (!user && !isAuthPage)) {
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+    if (user && isAuthPage) {
+      router.push('/dashboard');
+    }
+
+    if (!user && !isAuthPage) {
+      router.push('/login');
+    }
+  }, [user, loading, pathname, router]);
+
+
+  if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
