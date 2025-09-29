@@ -147,7 +147,7 @@ export function DeleteMedicationDialog({ children, medicationId }: DeleteDialogP
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>
             This action cannot be undone. This will permanently delete the
             medication and all its associated data.
