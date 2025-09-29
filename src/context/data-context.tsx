@@ -2,16 +2,17 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  getFirestore,
+  collection,
+  query,
+  addDoc,
+  updateDoc,
+  deleteDoc,
   doc,
   Timestamp,
-  onSnapshot 
+  onSnapshot,
+  where,
 } from 'firebase/firestore';
 import type { Medication, Log } from '@/lib/types';
 import { app } from '@/lib/firebase';
@@ -48,21 +49,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     setLoadingData(true);
-    
-    const collections = ['medications', 'logs'];
-    const setters:any = {
+
+    const collections = {
       medications: setMedications,
       logs: setLogs,
     };
 
-    const unsubscribes = collections.map(colName => {
-      const q = query(collection(db, `users/${user.uid}/${colName}`));
-      
+    const unsubscribes = Object.entries(collections).map(([colName, setter]) => {
+      const q = query(collection(db, 'users', user.uid, colName));
       return onSnapshot(q, (querySnapshot) => {
         const items: any[] = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          // Convert Firestore Timestamps to JS Dates
           const item = { id: doc.id, ...data };
           for (const key in item) {
             if (item[key] instanceof Timestamp) {
@@ -71,21 +69,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
           }
           items.push(item);
         });
-        setters[colName](items);
+        setter(items);
       });
     });
 
     setLoadingData(false);
 
     // Cleanup listeners on unmount
-    return () => unsubscribes.forEach(unsub => unsub());
-
+    return () => unsubscribes.forEach((unsub) => unsub());
   }, [user]);
 
   const today = new Date();
   const todaysMedications = medications.filter(med => med.status === 'active' && med.startDate <= today && (!med.endDate || med.endDate >= today));
 
-  const addMedication = async (med: MedicationInput) => {
+   const addMedication = async (med: MedicationInput) => {
     if (!user) throw new Error("User not authenticated");
 
     const newMedData = {
@@ -94,17 +91,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
       status: 'active',
       startDate: new Date(),
     };
-
+    
     await addDoc(collection(db, `users/${user.uid}/medications`), newMedData);
   };
-
 
   const updateMedication = async (updatedMed: Medication) => {
      if (!user) throw new Error("User not authenticated");
 
     const { id, ...medData } = updatedMed;
     const docRef = doc(db, `users/${user.uid}/medications`, id);
-    await updateDoc(docRef, medData);
+    await updateDoc(docRef, medData as { [x: string]: any });
   };
 
 
@@ -123,13 +119,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <DataContext.Provider value={{ 
-        medications, 
-        logs, 
+    <DataContext.Provider value={{
+        medications,
+        logs,
         todaysMedications,
         loadingData,
-        addMedication, 
-        updateMedication, 
+        addMedication,
+        updateMedication,
         deleteMedication,
         addLog,
     }}>
