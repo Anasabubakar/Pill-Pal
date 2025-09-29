@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, User } from 'firebase/auth';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import Link from 'next/link';
 
@@ -23,6 +23,14 @@ export default function LoginPage() {
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormInputs>();
   const auth = getAuth(app);
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, [auth]);
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setError(null);
@@ -49,7 +57,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="mx-auto max-w-sm w-full">
+      <Card className="mx-auto max-w-sm w-full animate-in fade-in zoom-in-95 duration-500">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>

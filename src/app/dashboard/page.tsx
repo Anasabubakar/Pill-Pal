@@ -23,7 +23,7 @@ export default function DashboardPage() {
           </Button>
         </AddMedicationDialog>
       </PageHeader>
-      <div className="flex-1 overflow-auto p-6 bg-background/50">
+      <div className="flex-1 overflow-auto p-6 bg-background/50 animate-in fade-in duration-500">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold font-headline mb-4">Today's Schedule</h2>
@@ -31,7 +31,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold font-headline mb-4">AI Insights</h2>
-            <Card className="bg-card shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="bg-card shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
               <CardHeader>
                 <div className="flex items-center gap-3 text-primary">
                     <Sparkles className="h-6 w-6" />

@@ -40,7 +40,7 @@ export function MedicationSchedule() {
   return (
     <div className="space-y-4">
       {todaysMedications.map((med) => (
-        <Card key={med.id} className="bg-card shadow-lg hover:shadow-xl transition-shadow">
+        <Card key={med.id} className="bg-card shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full">
@@ -76,7 +76,7 @@ export function MedicationSchedule() {
         </Card>
       ))}
        {todaysMedications.length === 0 && (
-         <Card className="flex flex-col items-center justify-center p-10 border-dashed">
+         <Card className="flex flex-col items-center justify-center p-10 border-dashed animate-in fade-in duration-500">
             <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
             <h3 className="text-xl font-bold font-headline">All Clear!</h3>
             <p className="text-muted-foreground">You have no medications scheduled for today.</p>

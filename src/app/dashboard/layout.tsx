@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <DataProvider>
         <div className="flex min-h-screen w-full bg-background font-body">
           <SidebarNav />
-          <main className="flex-1 flex flex-col">
+          <main className="flex-1 flex flex-col animate-in fade-in duration-500">
             {children}
           </main>
         </div>
