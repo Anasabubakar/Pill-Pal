@@ -21,14 +21,6 @@ export type Log = {
   note?: string;
 };
 
-export type Guardian = {
-  id: string;
-  userId: string;
-  email: string;
-  permissions: ('viewLogs' | 'receiveAlerts')[];
-  status: 'pending' | 'active';
-}
-
 export type User = {
   name: string;
   email: string;

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Pill, ClipboardList, Users, Sparkles, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Pill, ClipboardList, Sparkles, LogOut, Settings } from 'lucide-react';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,6 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/medications', label: 'Medications', icon: Pill },
   { href: '/dashboard/logs', label: 'Logs', icon: ClipboardList },
-  { href: '/dashboard/guardians', label: 'Guardians', icon: Users },
   { href: '/dashboard/ask-ai', label: 'Ask AI', icon: Sparkles },
 ];
 
@@ -51,7 +50,7 @@ export function SidebarNav() {
   }
 
   return (
-    <aside className="w-64 flex-col border-r bg-card p-4 hidden md:flex">
+    <aside className="w-64 flex-col border-r bg-card p-4 hidden md:flex animate-in slide-in-from-left-12 duration-500">
       <div className="flex items-center gap-2 pb-4">
         <Logo className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-bold font-headline text-primary">Pill Pal</h1>

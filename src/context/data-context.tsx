@@ -15,21 +15,19 @@ import {
   Timestamp,
   onSnapshot 
 } from 'firebase/firestore';
-import type { Medication, Log, Guardian } from '@/lib/types';
+import type { Medication, Log } from '@/lib/types';
 import { app } from '@/lib/firebase';
 import { useAuth } from './auth-context';
 
 interface DataContextType {
   medications: Medication[];
   logs: Log[];
-  guardians: Guardian[];
   todaysMedications: Medication[];
   loadingData: boolean;
   addMedication: (med: Omit<Medication, 'id' | 'status' | 'startDate' | 'userId'>) => Promise<void>;
   updateMedication: (med: Medication) => Promise<void>;
   deleteMedication: (id: string) => Promise<void>;
   addLog: (log: Omit<Log, 'id' | 'userId'>) => Promise<void>;
-  addGuardian: (guardian: Omit<Guardian, 'id' | 'userId'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -39,25 +37,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
-  const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     if (!user) {
       setMedications([]);
       setLogs([]);
-      setGuardians([]);
       setLoadingData(false);
       return;
     }
 
     setLoadingData(true);
     
-    const collections = ['medications', 'logs', 'guardians'];
+    const collections = ['medications', 'logs'];
     const setters:any = {
       medications: setMedications,
       logs: setLogs,
-      guardians: setGuardians,
     };
 
     const unsubscribes = collections.map(colName => {
@@ -121,27 +116,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await addDoc(collection(db, `users/${user.uid}/logs`), newLog);
   };
 
-  const addGuardian = async (guardian: Omit<Guardian, 'id' | 'userId'>) => {
-    if (!user) return;
-    const newGuardian = {
-      ...guardian,
-      userId: user.uid,
-    };
-    await addDoc(collection(db, `users/${user.uid}/guardians`), newGuardian);
-  };
-
   return (
     <DataContext.Provider value={{ 
         medications, 
         logs, 
-        guardians,
         todaysMedications,
         loadingData,
         addMedication, 
         updateMedication, 
         deleteMedication,
         addLog,
-        addGuardian
     }}>
       {children}
     </DataContext.Provider>
