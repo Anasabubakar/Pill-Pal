@@ -118,9 +118,8 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit" disabled={isSubmitting}>
-                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isSubmitting ? 'Saving...' : 'Save changes'}
+                        <Button type="submit">
+                            Save changes
                         </Button>
                     </DialogFooter>
                 </form>
