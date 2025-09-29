@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 
-const navItems = [
+export const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/medications', label: 'Medications', icon: Pill },
   { href: '/dashboard/logs', label: 'Logs', icon: ClipboardList },
