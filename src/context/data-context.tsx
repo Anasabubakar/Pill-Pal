@@ -15,23 +15,27 @@ import {
   Timestamp,
   onSnapshot 
 } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import type { Medication, Log } from '@/lib/types';
 import { app } from '@/lib/firebase';
 import { useAuth } from './auth-context';
+
+type MedicationInput = Omit<Medication, 'id' | 'status' | 'startDate' | 'userId' | 'imageUrl' | 'imagePath'> & { image?: FileList };
 
 interface DataContextType {
   medications: Medication[];
   logs: Log[];
   todaysMedications: Medication[];
   loadingData: boolean;
-  addMedication: (med: Omit<Medication, 'id' | 'status' | 'startDate' | 'userId'>) => Promise<void>;
-  updateMedication: (med: Medication) => Promise<void>;
+  addMedication: (med: MedicationInput) => Promise<void>;
+  updateMedication: (med: Medication, newImage?: FileList) => Promise<void>;
   deleteMedication: (id: string) => Promise<void>;
   addLog: (log: Omit<Log, 'id' | 'userId'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -85,10 +89,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const today = new Date();
   const todaysMedications = medications.filter(med => med.status === 'active' && med.startDate <= today && (!med.endDate || med.endDate >= today));
 
-  const addMedication = async (med: Omit<Medication, 'id' | 'status' | 'startDate' | 'userId'>) => {
+  const uploadImage = async (userId: string, imageFile: File): Promise<{ imageUrl: string, imagePath: string }> => {
+    const imagePath = `users/${userId}/medications/${Date.now()}_${imageFile.name}`;
+    const storageRef = ref(storage, imagePath);
+    const snapshot = await uploadBytes(storageRef, imageFile);
+    const imageUrl = await getDownloadURL(snapshot.ref);
+    return { imageUrl, imagePath };
+  };
+
+  const addMedication = async (med: MedicationInput) => {
     if (!user) return;
+    
+    let imageInfo: { imageUrl?: string, imagePath?: string } = {};
+    if (med.image && med.image.length > 0) {
+      imageInfo = await uploadImage(user.uid, med.image[0]);
+    }
+    
+    const { image, ...medData } = med;
+
     const newMed = {
-      ...med,
+      ...medData,
+      ...imageInfo,
       userId: user.uid,
       status: 'active',
       startDate: new Date(),
@@ -96,14 +117,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await addDoc(collection(db, `users/${user.uid}/medications`), newMed);
   };
 
-  const updateMedication = async (updatedMed: Medication) => {
+  const updateMedication = async (updatedMed: Medication, newImage?: FileList) => {
     if (!user) return;
     const { id, ...medData } = updatedMed;
-    await updateDoc(doc(db, `users/${user.uid}/medications`, id), medData);
+
+    let imageInfo: { imageUrl?: string, imagePath?: string } = {
+        imageUrl: medData.imageUrl,
+        imagePath: medData.imagePath,
+    };
+
+    if (newImage && newImage.length > 0) {
+      // If there's an old image, delete it
+      if (medData.imagePath) {
+        const oldImageRef = ref(storage, medData.imagePath);
+        await deleteObject(oldImageRef).catch(e => console.error("Error deleting old image:", e));
+      }
+      imageInfo = await uploadImage(user.uid, newImage[0]);
+    }
+    
+    const finalMedData = {
+        ...medData,
+        ...imageInfo,
+    };
+    
+    await updateDoc(doc(db, `users/${user.uid}/medications`, id), finalMedData);
   };
 
   const deleteMedication = async (id: string) => {
     if (!user) return;
+
+    const medToDelete = medications.find(m => m.id === id);
+    if (medToDelete && medToDelete.imagePath) {
+        const imageRef = ref(storage, medToDelete.imagePath);
+        await deleteObject(imageRef).catch(e => console.error("Error deleting image:", e));
+    }
+
     await deleteDoc(doc(db, `users/${user.uid}/medications`, id));
   };
 

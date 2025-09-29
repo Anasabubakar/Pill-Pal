@@ -1,5 +1,6 @@
 'use client';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EditMedicationDialog, DeleteMedicationDialog } from '@/components/medication-dialogs';
 import type { Medication } from '@/lib/types';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface MedicationsTableProps {
   medications: Medication[];
@@ -33,10 +35,11 @@ export function MedicationsTable({ medications, onUpdate, onDelete }: Medication
   };
   
   return (
-    <div className="rounded-lg border shadow-sm bg-card">
+    <div className="rounded-lg border shadow-sm bg-card animate-in fade-in duration-500">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[80px]">Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Dosage</TableHead>
             <TableHead>Schedule</TableHead>
@@ -49,6 +52,14 @@ export function MedicationsTable({ medications, onUpdate, onDelete }: Medication
         <TableBody>
           {medications.map((med) => (
             <TableRow key={med.id}>
+              <TableCell>
+                <Avatar className="h-12 w-12 rounded-md">
+                    <AvatarImage src={med.imageUrl} alt={med.name} />
+                    <AvatarFallback className="rounded-md bg-muted">
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    </AvatarFallback>
+                </Avatar>
+              </TableCell>
               <TableCell className="font-medium">{med.name}</TableCell>
               <TableCell>{med.dosage}</TableCell>
               <TableCell>{med.times.join(', ')} - {med.repeat}</TableCell>

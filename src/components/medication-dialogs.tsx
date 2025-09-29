@@ -21,11 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDataContext } from '@/context/data-context';
 import type { Medication } from '@/lib/types';
 
+const imageSchema = z.instanceof(FileList).optional();
+
 const medicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   dosage: z.string().min(1, 'Dosage is required'),
   times: z.string().min(1, 'At least one time is required'),
   repeat: z.enum(['daily', 'weekly', 'custom']),
+  image: imageSchema,
 });
 
 type MedicationFormData = z.infer<typeof medicationSchema>;
@@ -49,15 +52,17 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
     });
 
     const onSubmit: SubmitHandler<MedicationFormData> = (data) => {
-        const medicationData = {
-            ...data,
+        const { image, ...medicationData } = data;
+        
+        const medicationPayload = {
+            ...medicationData,
             times: data.times.split(',').map(t => t.trim()).filter(Boolean),
         };
 
         if (medication) {
-            updateMedication({ ...medication, ...medicationData });
+            updateMedication({ ...medication, ...medicationPayload }, image);
         } else {
-            addMedication(medicationData);
+            addMedication({ ...medicationPayload, image });
         }
         setOpen(false);
     };
@@ -102,6 +107,10 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                                 </SelectContent>
                             </Select>
                         </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="image" className="text-right">Image</Label>
+                            <Input id="image" type="file" {...register('image')} className="col-span-3" />
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button type="submit">Save changes</Button>
@@ -141,7 +150,7 @@ export function DeleteMedicationDialog({ children, medicationId }: DeleteDialogP
           <DialogTitle>Are you sure?</DialogTitle>
           <DialogDescription>
             This action cannot be undone. This will permanently delete the
-            medication and all its associated logs.
+            medication and all its associated data.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
