@@ -41,6 +41,10 @@ export function SidebarNav() {
 
   const getInitials = (email: string) => {
     if (user?.displayName) {
+        const names = user.displayName.split(' ');
+        if (names.length > 1) {
+            return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
+        }
         return user.displayName.charAt(0).toUpperCase();
     }
     return email.charAt(0).toUpperCase();
@@ -98,9 +102,11 @@ export function SidebarNav() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
