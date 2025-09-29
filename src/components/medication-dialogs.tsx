@@ -41,7 +41,7 @@ interface MedicationDialogProps {
 function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
     const [open, setOpen] = useState(false);
     const { addMedication, updateMedication } = useDataContext();
-    const { register, handleSubmit, control, formState: { errors } } = useForm<MedicationFormData>({
+    const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<MedicationFormData>({
         resolver: zodResolver(medicationSchema),
         defaultValues: {
             name: medication?.name || '',
@@ -51,7 +51,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
         },
     });
 
-    const onSubmit: SubmitHandler<MedicationFormData> = (data) => {
+    const onSubmit: SubmitHandler<MedicationFormData> = async (data) => {
         const { image, ...medicationData } = data;
         
         const medicationPayload = {
@@ -59,12 +59,17 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             times: data.times.split(',').map(t => t.trim()).filter(Boolean),
         };
 
-        if (medication) {
-            updateMedication({ ...medication, ...medicationPayload }, image);
-        } else {
-            addMedication({ ...medicationPayload, image });
+        try {
+            if (medication) {
+                await updateMedication({ ...medication, ...medicationPayload }, image);
+            } else {
+                await addMedication({ ...medicationPayload, image });
+            }
+            setOpen(false);
+        } catch (error) {
+            console.error("Failed to save medication:", error);
+            // Optionally, show a toast notification to the user about the error
         }
-        setOpen(false);
     };
 
     return (
@@ -113,7 +118,9 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Save changes</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save changes'}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
