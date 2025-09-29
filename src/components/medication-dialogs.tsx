@@ -39,7 +39,7 @@ interface MedicationDialogProps {
 function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
     const [open, setOpen] = useState(false);
     const { addMedication, updateMedication } = useDataContext();
-    const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<MedicationFormData>({
+    const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset } = useForm<MedicationFormData>({
         resolver: zodResolver(medicationSchema),
         defaultValues: {
             name: medication?.name || '',
@@ -61,10 +61,10 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             } else {
                 await addMedication(medicationPayload);
             }
+            reset();
             setOpen(false);
         } catch (error) {
             console.error("Failed to save medication:", error);
-            // Optionally, show a toast notification to the user about the error
         }
     };
 
