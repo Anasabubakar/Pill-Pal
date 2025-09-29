@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,16 +41,31 @@ export default function SignupPage() {
     resolver: zodResolver(formSchema),
   });
   const auth = getAuth(app);
+  const db = getFirestore(app);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      await updateProfile(userCredential.user, {
+      const user = userCredential.user;
+
+      // Update Firebase Auth profile
+      await updateProfile(user, {
         displayName: `${data.firstName} ${data.lastName}`,
       });
-      await sendEmailVerification(userCredential.user);
+
+      // Create a user document in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        displayName: `${data.firstName} ${data.lastName}`,
+        notificationPreferences: {
+          email: false,
+        }
+      });
+
+      await sendEmailVerification(user);
       router.push(`/verify-email?email=${data.email}`);
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {

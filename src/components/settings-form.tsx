@@ -7,12 +7,14 @@ import { z } from 'zod';
 import { getAuth, updateProfile, reauthenticateWithCredential, EmailAuthProvider, updatePassword, type AuthError } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { app } from '@/lib/firebase';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -33,9 +35,10 @@ type PasswordFormInputs = z.infer<typeof passwordSchema>;
 
 export function SettingsForm() {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, userSettings, setUserSettings } = useAuth();
   const { toast } = useToast();
   const auth = getAuth();
+  const db = getFirestore(app);
 
   const profileForm = useForm<ProfileFormInputs>({
     resolver: zodResolver(profileSchema),
@@ -52,9 +55,14 @@ export function SettingsForm() {
   const onProfileSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
     if (!user) return;
     try {
+      const newDisplayName = `${data.firstName} ${data.lastName}`;
       await updateProfile(user, {
-        displayName: `${data.firstName} ${data.lastName}`,
+        displayName: newDisplayName,
       });
+
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, { displayName: newDisplayName });
+
       toast({ title: 'Success', description: 'Your profile has been updated.' });
     } catch (error) {
       console.error(error);
@@ -97,6 +105,30 @@ export function SettingsForm() {
     }
   };
 
+  const handleEmailNotificationChange = async (checked: boolean) => {
+    if (!user || !userSettings) return;
+
+    const newSettings = {
+      ...userSettings,
+      notificationPreferences: {
+        ...userSettings.notificationPreferences,
+        email: checked,
+      },
+    };
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, { 
+        'notificationPreferences.email': checked 
+      });
+      setUserSettings(newSettings);
+      toast({ title: 'Success', description: 'Notification preferences updated.' });
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'Error', description: 'Failed to update preferences.', variant: 'destructive' });
+    }
+  };
+
 
   return (
     <div className="max-w-4xl mx-auto grid gap-6">
@@ -130,6 +162,26 @@ export function SettingsForm() {
         </CardContent>
       </Card>
       
+       <Card>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>Manage how you receive alerts and reminders.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="email-notifications" className="text-base">
+              Email Reminders
+               <p className="text-sm text-muted-foreground font-normal">Receive email notifications for your medication schedule.</p>
+            </Label>
+            <Switch
+              id="email-notifications"
+              checked={userSettings?.notificationPreferences?.email || false}
+              onCheckedChange={handleEmailNotificationChange}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Appearance</CardTitle>
