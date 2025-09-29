@@ -26,6 +26,10 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   password: passwordSchema,
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type FormInputs = z.infer<typeof formSchema>;
@@ -96,6 +100,11 @@ export default function SignupPage() {
                <p className="text-xs text-muted-foreground">
                 Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character.
               </p>
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Repeat password</Label>
+              <Input id="confirmPassword" type="password" {...register('confirmPassword')} />
+              {errors.confirmPassword && <p className="text-destructive text-xs">{errors.confirmPassword.message}</p>}
             </div>
             {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={isSubmitting}>
