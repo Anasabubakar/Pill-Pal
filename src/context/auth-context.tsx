@@ -21,22 +21,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const processAuth = async () => {
+      // First, check if there's a redirect result from Google Sign-In
+      // This promise resolves to null if there was no redirect
       try {
-        // First, check if there's a redirect result from Google Sign-In
-        // This promise resolves to null if there was no redirect
         const result = await getRedirectResult(auth);
         if (result) {
-          // If we have a result, a user has just signed in.
-          // onAuthStateChanged will handle the user state and navigation.
-          // We can set loading to false here as we know the auth state is resolved.
-          setLoading(false);
-          return; // Stop further processing in this effect for now
+          // If we have a result, a user has just signed in via redirect.
+          // We can immediately push them to the dashboard.
+          // The onAuthStateChanged listener below will handle setting the user state.
+          router.push('/dashboard');
+          // We can often return here to avoid race conditions, but we'll let the listener handle state.
         }
       } catch (error) {
         console.error("Error processing redirect result:", error);
       }
       
-      // If there was no redirect, set up the normal auth state listener
+      // After handling a potential redirect, set up the normal auth state listener.
       const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         setUser(currentUser);
         setLoading(false); // Auth state is now confirmed
