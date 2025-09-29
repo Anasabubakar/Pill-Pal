@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
@@ -48,10 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  if (loading) {
+  const isProtectedRoute = !publicRoutes.includes(pathname);
+
+  if (loading || (!user && isProtectedRoute)) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
-
+  
   // Prevent dashboard flicker for unverified users
   if (user && !user.emailVerified && pathname !== '/verify-email') {
      return <div className="flex items-center justify-center min-h-screen">Loading...</div>;

@@ -50,33 +50,45 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     setLoadingData(true);
 
-    const collections = {
-      medications: setMedications,
-      logs: setLogs,
-    };
+    const medsQuery = query(collection(db, 'medications'), where('userId', '==', user.uid));
+    const logsQuery = query(collection(db, 'logs'), where('userId', '==', user.uid));
 
-    const unsubscribes = Object.entries(collections).map(([colName, setter]) => {
-      const q = query(collection(db, 'users', user.uid, colName));
-      return onSnapshot(q, (querySnapshot) => {
-        const items: any[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const item = { id: doc.id, ...data };
-          for (const key in item) {
-            if (item[key] instanceof Timestamp) {
-              item[key] = item[key].toDate();
-            }
+    const unsubMeds = onSnapshot(medsQuery, (querySnapshot) => {
+      const items: Medication[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const item = { id: doc.id, ...data };
+        for (const key in item) {
+          if (item[key] instanceof Timestamp) {
+            item[key] = item[key].toDate();
           }
-          items.push(item);
-        });
-        setter(items);
+        }
+        items.push(item as Medication);
       });
+      setMedications(items);
+    });
+
+    const unsubLogs = onSnapshot(logsQuery, (querySnapshot) => {
+      const items: Log[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const item = { id: doc.id, ...data };
+        for (const key in item) {
+          if (item[key] instanceof Timestamp) {
+            item[key] = item[key].toDate();
+          }
+        }
+        items.push(item as Log);
+      });
+      setLogs(items);
     });
 
     setLoadingData(false);
 
-    // Cleanup listeners on unmount
-    return () => unsubscribes.forEach((unsub) => unsub());
+    return () => {
+      unsubMeds();
+      unsubLogs();
+    };
   }, [user]);
 
   const today = new Date();
@@ -92,21 +104,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       startDate: new Date(),
     };
     
-    await addDoc(collection(db, `users/${user.uid}/medications`), newMedData);
+    await addDoc(collection(db, 'medications'), newMedData);
   };
 
   const updateMedication = async (updatedMed: Medication) => {
      if (!user) throw new Error("User not authenticated");
 
     const { id, ...medData } = updatedMed;
-    const docRef = doc(db, `users/${user.uid}/medications`, id);
+    const docRef = doc(db, 'medications', id);
     await updateDoc(docRef, medData as { [x: string]: any });
   };
 
 
   const deleteMedication = async (id: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, `users/${user.uid}/medications`, id));
+    await deleteDoc(doc(db, 'medications', id));
   };
 
   const addLog = async (log: Omit<Log, 'id' | 'userId'>) => {
@@ -115,7 +127,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ...log,
       userId: user.uid,
     };
-    await addDoc(collection(db, `users/${user.uid}/logs`), newLog);
+    await addDoc(collection(db, 'logs'), newLog);
   };
 
   return (

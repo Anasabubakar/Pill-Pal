@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, type ReactNode } from 'react';
 import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
@@ -49,7 +50,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
         },
     });
 
-    const onSubmit: SubmitHandler<MedicationFormData> = async (data) => {
+    const processSubmit: SubmitHandler<MedicationFormData> = async (data) => {
         const medicationPayload = {
             ...data,
             times: data.times.split(',').map(t => t.trim()).filter(Boolean),
@@ -72,7 +73,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(processSubmit)}>
                     <DialogHeader>
                         <DialogTitle>{medication ? 'Edit Medication' : 'Add Medication'}</DialogTitle>
                         <DialogDescription>
