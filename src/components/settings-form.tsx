@@ -35,7 +35,7 @@ type PasswordFormInputs = z.infer<typeof passwordSchema>;
 
 export function SettingsForm() {
   const { theme, setTheme } = useTheme();
-  const { user, userSettings, setUserSettings } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const auth = getAuth();
   const db = getFirestore(app);
@@ -105,31 +105,6 @@ export function SettingsForm() {
     }
   };
 
-  const handleEmailNotificationChange = async (checked: boolean) => {
-    if (!user || !userSettings) return;
-
-    const newSettings = {
-      ...userSettings,
-      notificationPreferences: {
-        ...userSettings.notificationPreferences,
-        email: checked,
-      },
-    };
-
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, { 
-        'notificationPreferences.email': checked 
-      });
-      setUserSettings(newSettings);
-      toast({ title: 'Success', description: 'Notification preferences updated.' });
-    } catch (error) {
-      console.error(error);
-      toast({ title: 'Error', description: 'Failed to update preferences.', variant: 'destructive' });
-    }
-  };
-
-
   return (
     <div className="max-w-4xl mx-auto grid gap-6">
       <Card>
@@ -159,26 +134,6 @@ export function SettingsForm() {
                 {profileForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-      
-       <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>Manage how you receive alerts and reminders.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="email-notifications" className="text-base">
-              Email Reminders
-               <p className="text-sm text-muted-foreground font-normal">Receive email notifications for your medication schedule.</p>
-            </Label>
-            <Switch
-              id="email-notifications"
-              checked={userSettings?.notificationPreferences?.email || false}
-              onCheckedChange={handleEmailNotificationChange}
-            />
-          </div>
         </CardContent>
       </Card>
 

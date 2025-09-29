@@ -60,9 +60,6 @@ export default function SignupPage() {
         uid: user.uid,
         email: user.email,
         displayName: `${data.firstName} ${data.lastName}`,
-        notificationPreferences: {
-          email: false,
-        }
       });
 
       await sendEmailVerification(user);

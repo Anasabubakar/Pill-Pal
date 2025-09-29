@@ -1,32 +1,21 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, type ReactNode, type Dispatch, type SetStateAction } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
-import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
-
-interface UserSettings {
-  notificationPreferences?: {
-    email?: boolean;
-  };
-}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  userSettings: UserSettings | null;
-  setUserSettings: Dispatch<SetStateAction<UserSettings | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const db = getFirestore(app);
 
 const publicRoutes = ['/login', '/signup', '/verify-email'];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -35,29 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
-        setLoading(false);
-        setUserSettings(null);
-      }
+      setLoading(false);
     });
 
     return () => unsubscribeAuth();
   }, [auth]);
-
-  useEffect(() => {
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
-      const unsubscribeSettings = onSnapshot(userDocRef, (doc) => {
-        if (doc.exists()) {
-          setUserSettings(doc.data() as UserSettings);
-        }
-        // Set loading to false once user and their settings are loaded
-        setLoading(false);
-      });
-      return () => unsubscribeSettings();
-    }
-  }, [user]);
-
 
   useEffect(() => {
     if (loading) return;
@@ -92,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, userSettings, setUserSettings }}>
+    <AuthContext.Provider value={{ user, loading }}>
       {children}
     </AuthContext.Provider>
   );
