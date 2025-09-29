@@ -4,7 +4,6 @@ import { useState, type ReactNode } from 'react';
 import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -118,8 +117,8 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit">
-                            Save changes
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save changes'}
                         </Button>
                     </DialogFooter>
                 </form>
