@@ -51,32 +51,32 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
         },
     });
 
-    const processSubmit: SubmitHandler<MedicationFormData> = async (data) => {
+    const processSubmit: SubmitHandler<MedicationFormData> = (data) => {
         const medicationPayload = {
             ...data,
             times: data.times.split(',').map(t => t.trim()).filter(Boolean),
         };
 
-        try {
-            if (medication) {
-                await updateMedication({ ...medication, ...medicationPayload });
-            } else {
-                await addMedication(medicationPayload);
-            }
+        const saveOperation = medication 
+            ? updateMedication({ ...medication, ...medicationPayload })
+            : addMedication(medicationPayload);
+
+        saveOperation.then(() => {
             toast({
                 title: 'Success!',
                 description: 'Your medication has been saved.',
             });
             reset();
-            setOpen(false); 
-        } catch (error) {
+        }).catch((error) => {
             console.error("Failed to save medication:", error);
             toast({
                 title: 'Error',
                 description: 'Failed to save medication. Please try again.',
                 variant: 'destructive',
             });
-        }
+        });
+        
+        setOpen(false); 
     };
 
     return (
@@ -135,8 +135,8 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                       <DialogClose asChild>
                         <Button variant="outline" type="button">Cancel</Button>
                       </DialogClose>
-                      <Button type="submit" disabled={isSubmitting}>
-                          {isSubmitting ? 'Saving...' : 'Save changes'}
+                      <Button type="submit">
+                          Save changes
                       </Button>
                     </DialogFooter>
                 </form>
