@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { Logo } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { UserNav } from '@/components/user-nav';
 
 function MobileNav() {
   const pathname = usePathname();
@@ -66,6 +67,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                  <div className="flex items-center gap-2">
                     <Logo className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold font-headline text-primary">Pill Pal</h1>
+                </div>
+                <div className="ml-auto">
+                  <UserNav />
                 </div>
             </header>
             <AnimatePresence mode="wait">
