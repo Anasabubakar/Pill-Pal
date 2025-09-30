@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -30,7 +31,7 @@ export function SidebarNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground transition-all duration-300 ease-in-out hover:bg-accent/50 hover:text-accent-foreground hover:scale-105',
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-card-foreground transition-all duration-300 ease-in-out hover:bg-accent/50 hover:text-accent-foreground',
               {
                 'bg-accent text-accent-foreground font-semibold': pathname === item.href,
               }
