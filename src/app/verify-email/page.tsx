@@ -91,9 +91,9 @@ function VerifyEmailContent() {
           <Button onClick={handleResend} disabled={isResending}>
             {isResending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : 'Resend Verification Link'}
           </Button>
-          <Button variant="outline" onClick={handleGoToLogin}>
-            Back to Login
-          </Button>
+           <p className="text-center text-sm text-muted-foreground">
+            If you need to, return to the website to log in again.
+          </p>
         </CardContent>
       </Card>
     </div>
