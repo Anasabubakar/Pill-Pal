@@ -59,10 +59,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <DataProvider>
-        <div className="flex min-h-screen w-full bg-background font-body">
+        <div className="flex h-screen w-full bg-background font-body overflow-hidden">
           <SidebarNav />
-          <main className="flex-1 flex flex-col relative">
-             <header className="flex h-14 items-center gap-4 border-b bg-card px-6 md:hidden">
+          <div className="flex flex-1 flex-col overflow-auto">
+             <header className="flex h-14 items-center gap-4 border-b bg-card px-6 md:hidden sticky top-0 z-10">
                 <MobileNav />
                  <div className="flex items-center gap-2">
                     <Logo className="h-6 w-6 text-primary" />
@@ -72,19 +72,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <UserNav />
                 </div>
             </header>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="flex-1 flex flex-col"
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
-          </main>
+            <main className="flex-1 flex flex-col">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex-1 flex flex-col"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </main>
+          </div>
         </div>
       </DataProvider>
     </AuthProvider>

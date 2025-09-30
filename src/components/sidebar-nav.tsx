@@ -19,12 +19,12 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 flex-col border-r bg-card p-4 hidden md:flex animate-in slide-in-from-left-12 duration-500">
+    <aside className="w-64 flex-col border-r bg-card p-4 hidden md:flex animate-in slide-in-from-left-12 duration-500 h-full">
       <div className="flex items-center gap-2 pb-4">
         <Logo className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-bold font-headline text-primary">Pill Pal</h1>
       </div>
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <Link
             key={item.href}
@@ -41,7 +41,7 @@ export function SidebarNav() {
           </Link>
         ))}
       </nav>
-      <div className="mt-auto">
+      <div className="mt-auto flex-shrink-0">
         <Separator className="my-4" />
         <UserNav />
       </div>
