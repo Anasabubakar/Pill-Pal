@@ -40,15 +40,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // Strict check: If auth is loading or there's no user, do not proceed.
-  // This is the core of the fix. The DataProvider will not render its children
-  // until authentication is fully resolved and a user is present.
-  if (authLoading || !user) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
   useEffect(() => {
-    // Because of the check above, this effect will ONLY run when we have a confirmed user.
+    // This effect will ONLY run when 'user' is available.
+    // If user is null (either during auth load or after logout), it will not run.
+    if (!user) {
+      setLoadingData(false);
+      // Clear data on logout
+      setMedications([]);
+      setLogs([]);
+      return;
+    }
+
+    setLoadingData(true);
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
 
@@ -92,7 +95,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubMeds();
       unsubLogs();
     };
-  }, [user]);
+  }, [user]); // The effect is now solely dependent on the user object.
+
+  // Strict check: If auth is still loading OR data is loading, show a loader.
+  // This is the gatekeeper that prevents rendering with incomplete data.
+  if (authLoading || (loadingData && user)) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   const today = new Date();
   const todaysMedications = medications.filter(med => med.status === 'active' && med.startDate <= today && (!med.endDate || med.endDate >= today));
@@ -107,7 +116,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       startDate: new Date(),
     };
     
-    await addDoc(collection(db, 'users', user.uid, 'medications'), newMedData);
+    return addDoc(collection(db, 'users', user.uid, 'medications'), newMedData).then(() => {});
   };
 
   const updateMedication = async (updatedMed: Medication) => {
@@ -115,7 +124,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const { id, ...medData } = updatedMed;
     const docRef = doc(db, 'users', user.uid, 'medications', id);
-    await updateDoc(docRef, medData as { [x: string]: any });
+    return updateDoc(docRef, medData as { [x: string]: any });
   };
 
 
