@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
@@ -13,7 +14,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import type { Medication, Log } from '@/lib/types';
-import { app } from '@/lib/firebase'; // Import the initialized app
+import { app } from '@/lib/firebase';
 import { useAuth } from './auth-context';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,7 +32,6 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initialize Firestore with the app instance
 const db = getFirestore(app);
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -42,10 +42,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Wait until authentication is complete and we have a user
     if (authLoading || !user) {
       if (!authLoading) {
-        // If auth is done and there's no user, we can stop loading
         setDataLoading(false);
       }
       return;
@@ -99,10 +97,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubLogs();
     };
   }, [user, authLoading, toast]);
-
-  // Children are rendered by AuthProvider. DataProvider only shows loading state
-  // if auth is done but data is still being fetched.
-  if (dataLoading && user) {
+  
+  if (dataLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
   }
 
@@ -126,7 +122,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to add medication:", error);
       toast({ title: "Save Failed", description: "Your medication could not be saved. Please try again.", variant: "destructive" });
-      throw error; // Re-throw error to be caught by the form handler
+      throw error; 
     }
   };
 
@@ -139,7 +135,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to update medication:", error);
       toast({ title: "Update Failed", description: "Your changes could not be saved. Please try again.", variant: "destructive" });
-      throw error; // Re-throw error to be caught by the form handler
+      throw error;
     }
   };
 
