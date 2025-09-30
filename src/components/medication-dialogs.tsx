@@ -70,7 +70,12 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+            if (!isOpen) {
+                reset();
+            }
+        }}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit(processSubmit)}>
@@ -117,9 +122,11 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                         </div>
                     </div>
                     <DialogFooter>
+                      <DialogClose asChild>
                         <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? 'Saving...' : 'Save changes'}
                         </Button>
+                      </DialogClose>
                     </DialogFooter>
                 </form>
             </DialogContent>
