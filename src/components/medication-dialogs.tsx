@@ -62,7 +62,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                 await addMedication(medicationPayload);
             }
             reset();
-            setOpen(false); // Close the dialog
+            setOpen(false); // This will now correctly close the dialog after saving
         } catch (error) {
             console.error("Failed to save medication:", error);
             // Optionally, show an error toast to the user
@@ -123,10 +123,11 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                     </div>
                     <DialogFooter>
                       <DialogClose asChild>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving...' : 'Save changes'}
-                        </Button>
+                        <Button variant="outline" type="button">Cancel</Button>
                       </DialogClose>
+                      <Button type="submit" disabled={isSubmitting}>
+                          {isSubmitting ? 'Saving...' : 'Save changes'}
+                      </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
