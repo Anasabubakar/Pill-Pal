@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { app } from '@/lib/firebase';
+import { Separator } from '@/components/ui/separator';
 
 const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters long')
@@ -44,22 +45,49 @@ export default function SignupPage() {
   const db = getFirestore(app);
   const router = useRouter();
 
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    setError(null);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        });
+      }
+
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError('Failed to sign in with Google. Please try again.');
+      console.error(err);
+    }
+  };
+
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
+      const displayName = `${data.firstName} ${data.lastName}`;
       // Update Firebase Auth profile
       await updateProfile(user, {
-        displayName: `${data.firstName} ${data.lastName}`,
+        displayName: displayName,
       });
 
       // Create a user document in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
-        displayName: `${data.firstName} ${data.lastName}`,
+        displayName: displayName,
       });
 
       await sendEmailVerification(user);
@@ -122,9 +150,26 @@ export default function SignupPage() {
             </div>
             {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating account...' : 'Create an account'}
+              {isSubmitting ? 'Creating account...' : 'Create an account with Email'}
             </Button>
           </form>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+          
+          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+             <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4"><path fill="currentColor" d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.3 1.62-3.85 1.62-4.64 0-8.54-3.82-8.54-8.42s3.9-8.42 8.54-8.42c2.47 0 4.02.98 4.97 1.9l-2.2 2.18c-.83-.79-1.9-1.35-3.02-1.35-3.4 0-6.17 2.83-6.17 6.25s2.77 6.25 6.17 6.25c2.05 0 3.12-.87 3.7-1.45.5-.5.85-1.22.95-2.05H12.48z"></path></svg>
+            Sign up with Google
+          </Button>
+
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
             <Link href="/login" className="underline">

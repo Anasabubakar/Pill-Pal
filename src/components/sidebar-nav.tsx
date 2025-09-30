@@ -38,15 +38,13 @@ export function SidebarNav() {
     router.push('/login');
   };
 
-  const getInitials = (email: string) => {
-    if (user?.displayName) {
-        const names = user.displayName.split(' ');
-        if (names.length > 1) {
-            return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
-        }
-        return user.displayName.charAt(0).toUpperCase();
+  const getInitials = (emailOrName: string) => {
+    if (!emailOrName) return 'U';
+    const names = emailOrName.split(' ');
+    if (names.length > 1) {
+        return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
     }
-    return email.charAt(0).toUpperCase();
+    return emailOrName.charAt(0).toUpperCase();
   }
 
   return (
@@ -79,7 +77,7 @@ export function SidebarNav() {
             <Button variant="ghost" className="flex items-center gap-3 w-full justify-start h-auto p-0">
                <Avatar>
                  <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} />
-                 <AvatarFallback>{user ? getInitials(user.email!) : 'U'}</AvatarFallback>
+                 <AvatarFallback>{user ? getInitials(user.displayName || user.email!) : 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start overflow-hidden">
                 <span className="font-medium truncate max-w-[150px]">
