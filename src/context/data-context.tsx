@@ -40,18 +40,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Strict check: If auth is loading or there's no user, do not proceed.
+  // This is the core of the fix. The DataProvider will not render its children
+  // until authentication is fully resolved and a user is present.
+  if (authLoading || !user) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   useEffect(() => {
-    // Only proceed if authentication is no longer loading and we have a user
-    if (authLoading || !user) {
-      // If there's no user or auth is still loading, clear existing data and wait.
-      setMedications([]);
-      setLogs([]);
-      setLoadingData(!authLoading); // If auth is done loading and no user, data is also done "loading".
-      return;
-    }
-
-    setLoadingData(true);
-
+    // Because of the check above, this effect will ONLY run when we have a confirmed user.
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
 
@@ -68,7 +65,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
-      setLoadingData(false); // Data has been loaded
+      setLoadingData(false);
     }, (error) => {
       console.error("Error fetching medications:", error);
       setLoadingData(false);
@@ -95,7 +92,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubMeds();
       unsubLogs();
     };
-  }, [user, authLoading]);
+  }, [user]);
 
   const today = new Date();
   const todaysMedications = medications.filter(med => med.status === 'active' && med.startDate <= today && (!med.endDate || med.endDate >= today));
