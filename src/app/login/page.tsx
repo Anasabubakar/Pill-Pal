@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import Link from 'next/link';
 
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { app } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 type FormInputs = {
   email: string;
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormInputs>();
   const auth = getAuth(app);
   const router = useRouter();
+  const { toast } = useToast();
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     setError(null);
@@ -31,7 +33,12 @@ export default function LoginPage() {
       await userCredential.user.reload();
       const freshUser = auth.currentUser;
 
-      if (!freshUser?.emailVerified) {
+      if (freshUser && !freshUser.emailVerified) {
+        await sendEmailVerification(freshUser);
+        toast({
+          title: 'Verification Email Sent',
+          description: 'A new verification link has been sent to your email. Please check your inbox and spam folder.',
+        });
         router.push(`/verify-email?email=${data.email}`);
         return;
       }

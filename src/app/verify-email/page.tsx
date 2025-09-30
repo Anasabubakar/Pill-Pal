@@ -41,6 +41,7 @@ function VerifyEmailContent() {
   const handleResend = async () => {
     if (!auth.currentUser) {
       toast({ title: 'Error', description: 'Please log in again to resend the verification email.', variant: 'destructive'});
+      // Re-directing to login will automatically send a new link.
       router.push(`/login?email=${email}`);
       return;
     }
@@ -87,7 +88,7 @@ function VerifyEmailContent() {
           <p className="text-center text-sm text-muted-foreground">
             Didn&apos;t receive an email?
           </p>
-          <Button onClick={handleResend} disabled={isResending || !auth.currentUser}>
+          <Button onClick={handleResend} disabled={isResending}>
             {isResending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : 'Resend Verification Link'}
           </Button>
           <Button variant="outline" onClick={handleGoToLogin}>
