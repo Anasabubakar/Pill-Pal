@@ -35,23 +35,24 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const db = getFirestore(app);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    // Only proceed if authentication is no longer loading and we have a user
+    if (authLoading || !user) {
       setMedications([]);
       setLogs([]);
-      setLoadingData(false);
+      setLoadingData(false); // Set to false if no user
       return;
     }
 
     setLoadingData(true);
 
-    const medsQuery = query(collection(db, 'medications'), where('userId', '==', user.uid));
-    const logsQuery = query(collection(db, 'logs'), where('userId', '==', user.uid));
+    const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
+    const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
 
     const unsubMeds = onSnapshot(medsQuery, (querySnapshot) => {
       const items: Medication[] = [];
@@ -66,6 +67,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
+      setLoadingData(false); // Data has been loaded
+    }, (error) => {
+      console.error("Error fetching medications:", error);
+      setLoadingData(false);
     });
 
     const unsubLogs = onSnapshot(logsQuery, (querySnapshot) => {
@@ -81,15 +86,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Log);
       });
       setLogs(items);
+    }, (error) => {
+      console.error("Error fetching logs:", error);
     });
-
-    setLoadingData(false);
 
     return () => {
       unsubMeds();
       unsubLogs();
     };
-  }, [user]);
+  }, [user, authLoading]);
 
   const today = new Date();
   const todaysMedications = medications.filter(med => med.status === 'active' && med.startDate <= today && (!med.endDate || med.endDate >= today));
@@ -104,21 +109,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       startDate: new Date(),
     };
     
-    await addDoc(collection(db, 'medications'), newMedData);
+    await addDoc(collection(db, 'users', user.uid, 'medications'), newMedData);
   };
 
   const updateMedication = async (updatedMed: Medication) => {
      if (!user) throw new Error("User not authenticated");
 
     const { id, ...medData } = updatedMed;
-    const docRef = doc(db, 'medications', id);
+    const docRef = doc(db, 'users', user.uid, 'medications', id);
     await updateDoc(docRef, medData as { [x: string]: any });
   };
 
 
   const deleteMedication = async (id: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, 'medications', id));
+    await deleteDoc(doc(db, 'users', user.uid, 'medications', id));
   };
 
   const addLog = async (log: Omit<Log, 'id' | 'userId'>) => {
@@ -127,7 +132,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ...log,
       userId: user.uid,
     };
-    await addDoc(collection(db, 'logs'), newLog);
+    await addDoc(collection(db, 'users', user.uid, 'logs'), newLog);
   };
 
   return (

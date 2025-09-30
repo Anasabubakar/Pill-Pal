@@ -51,16 +51,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isProtectedRoute = !publicRoutes.includes(pathname);
 
-  if (loading || (!user && isProtectedRoute)) {
+  // While initial authentication is happening, show a loading screen.
+  if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  // Prevent dashboard flicker for unverified users
+  // If we are on a protected route and there is no user, show loading while redirecting.
+  if (isProtectedRoute && !user) {
+     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  // If user is not verified, and not on the verify page, show loading while redirecting.
   if (user && !user.emailVerified && pathname !== '/verify-email') {
      return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Prevent dashboard flicker for logged-in users on public pages
+  // If user is verified, but on a public page, show loading while redirecting to dashboard.
   if (user && user.emailVerified && publicRoutes.includes(pathname)) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
