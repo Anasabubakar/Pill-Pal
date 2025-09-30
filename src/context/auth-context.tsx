@@ -56,6 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
   
+  // This is the main gatekeeper. If we are loading, show a full screen loader.
+  // If we are not loading AND there is no user, but we're on a protected page,
+  // AuthProvider's effect will redirect, but showing loader is fine to prevent flicker.
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -64,10 +67,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   }
 
+  // If not loading and not a user, and on a public page, show the page.
+  if (!user && publicRoutes.includes(pathname)) {
+    return <>{children}</>;
+  }
+
+  // If we have a user, proceed to render the app (which includes DataProvider).
+  if (user) {
+     return (
+      <AuthContext.Provider value={{ user, loading }}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  // Fallback for edge cases, typically shows loader while redirecting.
   return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="text-lg">Authenticating...</div>
+    </div>
   );
 }
 

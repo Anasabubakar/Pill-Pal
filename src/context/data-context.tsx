@@ -13,7 +13,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import type { Medication, Log } from '@/lib/types';
-import { app } from '@/lib/firebase';
+import { app } from '@/lib/firebase'; // Import the initialized app
 import { useAuth } from './auth-context';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,6 +30,8 @@ interface DataContextType {
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
+
+// Initialize Firestore with the app instance
 const db = getFirestore(app);
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -40,15 +42,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Wait until authentication is complete and we have a user
     if (authLoading || !user) {
-      setDataLoading(authLoading);
-      setMedications([]);
-      setLogs([]);
+      if (!authLoading) {
+        // If auth is done and there's no user, we can stop loading
+        setDataLoading(false);
+      }
       return;
     }
 
     setDataLoading(true);
-
+    
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
 
@@ -95,10 +99,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubLogs();
     };
   }, [user, authLoading, toast]);
-  
-  // Do not render children until authentication is resolved and data has been loaded or attempted
-  if (authLoading || (user && dataLoading)) {
-      return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
+
+  // Children are rendered by AuthProvider. DataProvider only shows loading state
+  // if auth is done but data is still being fetched.
+  if (dataLoading && user) {
+    return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
   }
 
   const today = new Date();
@@ -118,14 +123,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         startDate: new Date(),
       };
       await addDoc(collection(db, 'users', user.uid, 'medications'), newMedData);
-      toast({
-        title: 'Success!',
-        description: 'Your medication has been saved.',
-      });
     } catch (error) {
       console.error("Failed to add medication:", error);
       toast({ title: "Save Failed", description: "Your medication could not be saved. Please try again.", variant: "destructive" });
-      throw error;
+      throw error; // Re-throw error to be caught by the form handler
     }
   };
 
@@ -135,14 +136,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { id, ...medData } = updatedMed;
       const docRef = doc(db, 'users', user.uid, 'medications', id);
       await updateDoc(docRef, medData as { [x: string]: any });
-       toast({
-        title: 'Success!',
-        description: 'Your changes have been saved.',
-      });
     } catch (error) {
       console.error("Failed to update medication:", error);
       toast({ title: "Update Failed", description: "Your changes could not be saved. Please try again.", variant: "destructive" });
-      throw error;
+      throw error; // Re-throw error to be caught by the form handler
     }
   };
 

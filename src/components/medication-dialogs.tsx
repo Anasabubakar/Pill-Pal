@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDataContext } from '@/context/data-context';
 import type { Medication } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const medicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -51,7 +52,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
         },
     });
 
-    const processSubmit: SubmitHandler<MedicationFormData> = (data) => {
+    const processSubmit: SubmitHandler<MedicationFormData> = async (data) => {
         const medicationPayload = {
             ...data,
             times: data.times.split(',').map(t => t.trim()).filter(Boolean),
@@ -61,29 +62,25 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             ? updateMedication({ ...medication, ...medicationPayload })
             : addMedication(medicationPayload);
 
-        saveOperation.then(() => {
+        try {
+            await saveOperation;
             toast({
                 title: 'Success!',
                 description: 'Your medication has been saved.',
             });
             reset();
-        }).catch((error) => {
+            setOpen(false); // Close dialog on success
+        } catch (error) {
+            // Error toast is already handled in the data context
             console.error("Failed to save medication:", error);
-            toast({
-                title: 'Error',
-                description: 'Failed to save medication. Please try again.',
-                variant: 'destructive',
-            });
-        });
-        
-        setOpen(false); 
+        }
     };
 
     return (
         <Dialog open={open} onOpenChange={(isOpen) => {
             setOpen(isOpen);
             if (!isOpen) {
-                reset();
+                reset(); // Reset form when dialog is closed
             }
         }}>
             <DialogTrigger asChild>{children}</DialogTrigger>
@@ -135,8 +132,9 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                       <DialogClose asChild>
                         <Button variant="outline" type="button">Cancel</Button>
                       </DialogClose>
-                      <Button type="submit">
-                          Save changes
+                      <Button type="submit" disabled={isSubmitting}>
+                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {isSubmitting ? 'Saving...' : 'Save changes'}
                       </Button>
                     </DialogFooter>
                 </form>
