@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDataContext } from '@/context/data-context';
 import type { Medication } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 const medicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -39,6 +40,7 @@ interface MedicationDialogProps {
 function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
     const [open, setOpen] = useState(false);
     const { addMedication, updateMedication } = useDataContext();
+    const { toast } = useToast();
     const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset } = useForm<MedicationFormData>({
         resolver: zodResolver(medicationSchema),
         defaultValues: {
@@ -61,11 +63,19 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             } else {
                 await addMedication(medicationPayload);
             }
+            toast({
+                title: 'Success!',
+                description: 'Your medication has been saved.',
+            });
             reset();
-            setOpen(false); // This will now correctly close the dialog after saving
+            setOpen(false); 
         } catch (error) {
             console.error("Failed to save medication:", error);
-            // Optionally, show an error toast to the user
+            toast({
+                title: 'Error',
+                description: 'Failed to save medication. Please try again.',
+                variant: 'destructive',
+            });
         }
     };
 
