@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -56,7 +57,7 @@ export function UserNav() {
             <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User Avatar'} />
             <AvatarFallback>{user ? getInitials(user.displayName || user.email!) : 'U'}</AvatarFallback>
           </Avatar>
-           <div className="hidden md:flex flex-col items-start">
+           <div className="hidden md:flex flex-col items-start overflow-hidden">
              <p className="text-sm font-medium leading-none truncate">
               {loading ? 'Loading...' : user?.displayName || 'User'}
             </p>
