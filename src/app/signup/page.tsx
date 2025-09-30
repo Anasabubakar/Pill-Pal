@@ -61,6 +61,7 @@ export default function SignupPage() {
         uid: user.uid,
         email: user.email,
         displayName: displayName,
+        createdAt: new Date(),
       });
 
       await sendEmailVerification(user);
