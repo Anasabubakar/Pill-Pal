@@ -1,3 +1,4 @@
+
 'use client';
 import { MoreHorizontal, Pill, Clock, Repeat } from 'lucide-react';
 import {
@@ -33,6 +34,10 @@ function MedicationActions({ med, onUpdate }: { med: Medication, onUpdate: (med:
     onUpdate({ ...med, status: 'inactive' });
   };
 
+  const handleActivate = () => {
+    onUpdate({ ...med, status: 'active' });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,7 +53,11 @@ function MedicationActions({ med, onUpdate }: { med: Medication, onUpdate: (med:
              Edit
            </button>
         </EditMedicationDialog>
-        <DropdownMenuItem onClick={handleDeactivate}>Deactivate</DropdownMenuItem>
+        {med.status === 'active' ? (
+          <DropdownMenuItem onClick={handleDeactivate}>Deactivate</DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={handleActivate}>Activate</DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DeleteMedicationDialog medicationId={med.id}>
           <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-destructive">
