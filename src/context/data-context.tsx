@@ -36,21 +36,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Wait until auth is resolved and we have a user.
     if (authLoading || !user) {
-      // If auth is loading, we are also in a data-loading state.
-      // If auth is done but there is no user, there's no data to load.
-      setIsDataLoading(authLoading);
+      setDataLoading(authLoading);
       setMedications([]);
       setLogs([]);
       return;
     }
 
-    setIsDataLoading(true);
+    setDataLoading(true);
+
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
 
@@ -67,11 +65,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
-      setIsDataLoading(false); 
+      setDataLoading(false);
     }, (error) => {
       console.error("Error fetching medications:", error);
       toast({ title: "Error", description: "Could not fetch medications.", variant: "destructive" });
-      setIsDataLoading(false);
+      setDataLoading(false);
     });
 
     const unsubLogs = onSnapshot(logsQuery, (querySnapshot) => {
@@ -97,9 +95,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubLogs();
     };
   }, [user, authLoading, toast]);
-
-  if (isDataLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
+  
+  // Do not render children until authentication is resolved and data has been loaded or attempted
+  if (authLoading || (user && dataLoading)) {
+      return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
   }
 
   const today = new Date();
@@ -109,7 +108,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     (!med.endDate || med.endDate >= today)
   );
 
-   const addMedication = async (med: MedicationInput) => {
+  const addMedication = async (med: MedicationInput) => {
     if (!user) throw new Error("User not authenticated");
     try {
       const newMedData = {
@@ -119,10 +118,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         startDate: new Date(),
       };
       await addDoc(collection(db, 'users', user.uid, 'medications'), newMedData);
+      toast({
+        title: 'Success!',
+        description: 'Your medication has been saved.',
+      });
     } catch (error) {
       console.error("Failed to add medication:", error);
       toast({ title: "Save Failed", description: "Your medication could not be saved. Please try again.", variant: "destructive" });
-      throw error; // Re-throw to allow form to handle it
+      throw error;
     }
   };
 
@@ -132,22 +135,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { id, ...medData } = updatedMed;
       const docRef = doc(db, 'users', user.uid, 'medications', id);
       await updateDoc(docRef, medData as { [x: string]: any });
+       toast({
+        title: 'Success!',
+        description: 'Your changes have been saved.',
+      });
     } catch (error) {
       console.error("Failed to update medication:", error);
       toast({ title: "Update Failed", description: "Your changes could not be saved. Please try again.", variant: "destructive" });
-      throw error; // Re-throw to allow form to handle it
+      throw error;
     }
   };
 
   const deleteMedication = async (id: string) => {
     if (!user) throw new Error("User not authenticated");
-    await deleteDoc(doc(db, 'users', user.uid, 'medications', id));
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'medications', id));
+      toast({
+        title: 'Deleted',
+        description: 'The medication has been deleted.',
+      });
+    } catch (error) {
+      console.error("Failed to delete medication:", error);
+      toast({ title: "Delete Failed", description: "Could not delete medication.", variant: "destructive" });
+    }
   };
 
   const addLog = async (log: Omit<Log, 'id' | 'userId'>) => {
     if (!user) throw new Error("User not authenticated");
     const newLog = { ...log, userId: user.uid };
-    await addDoc(collection(db, 'users', user.uid, 'logs'), newLog);
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'logs'), newLog);
+    } catch (error) {
+        console.error("Failed to add log:", error);
+        toast({ title: "Log Failed", description: "Could not log medication status.", variant: "destructive" });
+    }
   };
 
   return (
