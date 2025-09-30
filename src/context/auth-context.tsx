@@ -55,14 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [user, loading, pathname, router]);
-
-  const isPublicPage = publicRoutes.includes(pathname);
-
-  // If we are loading, or if we are in a redirect state, show a full-screen loader.
-  if (loading || (!user && !isPublicPage) || (user && user.emailVerified && isPublicPage) || (user && !user.emailVerified && pathname !== verificationRoute)) {
+  
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">Authenticating...</div>
       </div>
     );
   }

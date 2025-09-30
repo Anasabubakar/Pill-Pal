@@ -15,6 +15,7 @@ import {
 import type { Medication, Log } from '@/lib/types';
 import { app } from '@/lib/firebase';
 import { useAuth } from './auth-context';
+import { useToast } from '@/hooks/use-toast';
 
 type MedicationInput = Omit<Medication, 'id' | 'status' | 'startDate' | 'userId'>;
 
@@ -32,17 +33,21 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const db = getFirestore(app);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Only proceed if there is a user. The AuthProvider already handled the loading state for the user object.
-    if (!user) {
-        // If there's no user, there's no data to load.
-        setIsDataLoading(false);
-        return;
+    // Wait until auth is resolved and we have a user.
+    if (authLoading || !user) {
+      // If auth is loading, we are also in a data-loading state.
+      // If auth is done but there is no user, there's no data to load.
+      setIsDataLoading(authLoading);
+      setMedications([]);
+      setLogs([]);
+      return;
     }
 
     setIsDataLoading(true);
@@ -54,7 +59,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         const item: { [key: string]: any } = { id: doc.id, ...data };
-        // Convert Firestore Timestamps to JS Dates
         for (const key in item) {
           if (item[key] instanceof Timestamp) {
             item[key] = item[key].toDate();
@@ -63,10 +67,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
-      // Data is loaded once we get the first snapshot.
-      if(isDataLoading) setIsDataLoading(false); 
+      setIsDataLoading(false); 
     }, (error) => {
       console.error("Error fetching medications:", error);
+      toast({ title: "Error", description: "Could not fetch medications.", variant: "destructive" });
       setIsDataLoading(false);
     });
 
@@ -75,7 +79,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         const item: { [key: string]: any } = { id: doc.id, ...data };
-         // Convert Firestore Timestamps to JS Dates
         for (const key in item) {
           if (item[key] instanceof Timestamp) {
             item[key] = item[key].toDate();
@@ -86,18 +89,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setLogs(items.sort((a, b) => b.takenAt.getTime() - a.takenAt.getTime()));
     }, (error) => {
       console.error("Error fetching logs:", error);
+      toast({ title: "Error", description: "Could not fetch medication logs.", variant: "destructive" });
     });
 
     return () => {
       unsubMeds();
       unsubLogs();
     };
-  }, [user]); // The effect now solely depends on the user object.
+  }, [user, authLoading, toast]);
 
-  // The AuthProvider handles the main loading state. We only show this loader
-  // for the brief moment data is being fetched AFTER auth is confirmed.
   if (isDataLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
   }
 
   const today = new Date();
@@ -109,20 +111,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
    const addMedication = async (med: MedicationInput) => {
     if (!user) throw new Error("User not authenticated");
-    const newMedData = {
-      ...med,
-      userId: user.uid,
-      status: 'active',
-      startDate: new Date(),
-    };
-    await addDoc(collection(db, 'users', user.uid, 'medications'), newMedData);
+    try {
+      const newMedData = {
+        ...med,
+        userId: user.uid,
+        status: 'active',
+        startDate: new Date(),
+      };
+      await addDoc(collection(db, 'users', user.uid, 'medications'), newMedData);
+    } catch (error) {
+      console.error("Failed to add medication:", error);
+      toast({ title: "Save Failed", description: "Your medication could not be saved. Please try again.", variant: "destructive" });
+      throw error; // Re-throw to allow form to handle it
+    }
   };
 
   const updateMedication = async (updatedMed: Medication) => {
     if (!user) throw new Error("User not authenticated");
-    const { id, ...medData } = updatedMed;
-    const docRef = doc(db, 'users', user.uid, 'medications', id);
-    await updateDoc(docRef, medData as { [x: string]: any });
+    try {
+      const { id, ...medData } = updatedMed;
+      const docRef = doc(db, 'users', user.uid, 'medications', id);
+      await updateDoc(docRef, medData as { [x: string]: any });
+    } catch (error) {
+      console.error("Failed to update medication:", error);
+      toast({ title: "Update Failed", description: "Your changes could not be saved. Please try again.", variant: "destructive" });
+      throw error; // Re-throw to allow form to handle it
+    }
   };
 
   const deleteMedication = async (id: string) => {
