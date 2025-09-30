@@ -39,19 +39,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    // Wait until auth is no longer loading and we have a user.
     if (authLoading || !user) {
-      // If there's no user or auth is loading, we are not ready to fetch data.
-      // If we previously had data, clear it out.
-      if (medications.length > 0) setMedications([]);
-      if (logs.length > 0) setLogs([]);
-      // If there's no user, we can consider data "loaded" (as in, there's nothing to load).
-      // If auth is loading, keep data loading true.
       setLoadingData(authLoading);
       return;
     }
 
-    // At this point, we have a confirmed user. Set up Firestore listeners.
     setLoadingData(true);
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
@@ -70,11 +62,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
-      // We only set loading to false once the initial medication data has loaded.
       setLoadingData(false);
     }, (error) => {
       console.error("Error fetching medications:", error);
-      setLoadingData(false); // Also stop loading on error
+      setLoadingData(false);
     });
 
     const unsubLogs = onSnapshot(logsQuery, (querySnapshot) => {
@@ -95,15 +86,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       console.error("Error fetching logs:", error);
     });
 
-    // Cleanup function to unsubscribe from listeners when the component unmounts or user changes.
     return () => {
       unsubMeds();
       unsubLogs();
     };
-  }, [user, authLoading]); // Effect depends on user and authLoading status.
+  }, [user, authLoading]);
 
-  // The DataProvider's own gatekeeper.
-  // Do not render children until both auth is resolved AND initial data has been fetched.
+  // If either the auth state is loading or the initial data fetch is loading, show a loader.
+  // This is the primary gatekeeper for the rest of the application.
   if (authLoading || loadingData) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -149,7 +139,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         medications,
         logs,
         todaysMedications,
-        loadingData: loadingData, // Pass down the loading state
+        loadingData: loadingData,
         addMedication,
         updateMedication,
         deleteMedication,
