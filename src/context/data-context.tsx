@@ -43,9 +43,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Only proceed if authentication is no longer loading and we have a user
     if (authLoading || !user) {
+      // If there's no user or auth is still loading, clear existing data and wait.
       setMedications([]);
       setLogs([]);
-      setLoadingData(false); // Set to false if no user
+      setLoadingData(!authLoading); // If auth is done loading and no user, data is also done "loading".
       return;
     }
 
