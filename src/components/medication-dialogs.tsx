@@ -62,17 +62,20 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             ? updateMedication({ ...medication, ...medicationPayload })
             : addMedication(medicationPayload);
 
+        // Close the dialog immediately
+        setOpen(false);
+        reset();
+
         try {
             await saveOperation;
             toast({
                 title: 'Success!',
                 description: 'Your medication has been saved.',
             });
-            reset();
-            setOpen(false); // Close dialog on success
         } catch (error) {
             // Error toast is handled in context
             console.error("Failed to save medication:", error);
+            // Optionally, re-open the dialog or show a more persistent error
         }
     };
 
@@ -132,8 +135,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                       <DialogClose asChild>
                         <Button variant="outline" type="button">Cancel</Button>
                       </DialogClose>
-                      <Button type="submit" disabled={isSubmitting}>
-                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <Button type="submit">
                           Save changes
                       </Button>
                     </DialogFooter>
