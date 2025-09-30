@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
@@ -56,9 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, pathname, router]);
   
-  // This is the main gatekeeper. If we are loading, show a full screen loader.
-  // If we are not loading AND there is no user, but we're on a protected page,
-  // AuthProvider's effect will redirect, but showing loader is fine to prevent flicker.
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -72,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  // If we have a user, proceed to render the app (which includes DataProvider).
+  // If we have a user, proceed to render the app.
   if (user) {
      return (
       <AuthContext.Provider value={{ user, loading }}>
@@ -81,7 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  // Fallback for edge cases, typically shows loader while redirecting.
+  // Fallback for edge cases where user is null and we are on a protected route.
+  // The effect above will handle redirection. This just shows a loader in the meantime.
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="text-lg">Authenticating...</div>

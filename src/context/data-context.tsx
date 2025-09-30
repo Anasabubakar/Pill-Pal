@@ -44,6 +44,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (authLoading || !user) {
       if (!authLoading) {
+        // If auth is done and there's still no user, we can stop loading data.
         setDataLoading(false);
       }
       return;
@@ -67,7 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
-      setDataLoading(false);
+      setDataLoading(false); // Stop loading once medications are fetched
     }, (error) => {
       console.error("Error fetching medications:", error);
       toast({ title: "Error", description: "Could not fetch medications.", variant: "destructive" });
@@ -86,6 +87,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
         items.push(item as Log);
       });
+      // Sort logs by most recent first
       setLogs(items.sort((a, b) => b.takenAt.getTime() - a.takenAt.getTime()));
     }, (error) => {
       console.error("Error fetching logs:", error);
@@ -98,7 +100,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, [user, authLoading, toast]);
   
-  if (dataLoading) {
+  // Wait for both auth and initial data load to complete
+  if (authLoading || dataLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading Data...</div>;
   }
 

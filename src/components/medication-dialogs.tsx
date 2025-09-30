@@ -71,7 +71,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
             reset();
             setOpen(false); // Close dialog on success
         } catch (error) {
-            // Error toast is already handled in the data context
+            // Error toast is handled in context
             console.error("Failed to save medication:", error);
         }
     };
@@ -134,7 +134,7 @@ function MedicationFormDialog({ children, medication }: MedicationDialogProps) {
                       </DialogClose>
                       <Button type="submit" disabled={isSubmitting}>
                           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          {isSubmitting ? 'Saving...' : 'Save changes'}
+                          Save changes
                       </Button>
                     </DialogFooter>
                 </form>
