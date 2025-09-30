@@ -41,16 +41,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    // This effect will ONLY run when 'user' is available.
-    // If user is null (either during auth load or after logout), it will not run.
-    if (!user) {
-      setLoadingData(false);
-      // Clear data on logout
-      setMedications([]);
-      setLogs([]);
+    if (authLoading) {
+      // Don't do anything if auth is still loading.
       return;
     }
 
+    if (!user) {
+      // User is logged out, clear data and stop loading.
+      setMedications([]);
+      setLogs([]);
+      setLoadingData(false);
+      return;
+    }
+
+    // User is authenticated, set up listeners.
     setLoadingData(true);
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
@@ -95,10 +99,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubMeds();
       unsubLogs();
     };
-  }, [user]); // The effect is now solely dependent on the user object.
+  }, [user, authLoading]);
 
-  // Strict check: If auth is still loading OR data is loading, show a loader.
-  // This is the gatekeeper that prevents rendering with incomplete data.
+  // Gatekeeper: Do not render children until both auth and data are ready.
   if (authLoading || (loadingData && user)) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
