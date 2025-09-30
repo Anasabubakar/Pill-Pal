@@ -1,14 +1,16 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getAuth, sendEmailVerification, signOut } from 'firebase/auth';
+import { getAuth, sendEmailVerification, signOut, applyActionCode, checkActionCode, signInWithEmailAndPassword } from 'firebase/auth';
 import { MailCheck, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { app } from '@/lib/firebase';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -16,6 +18,7 @@ function VerifyEmailContent() {
   const email = searchParams.get('email');
   const auth = getAuth(app);
   const { toast } = useToast();
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -37,17 +40,33 @@ function VerifyEmailContent() {
 
 
   const handleResend = async () => {
-    if (auth.currentUser) {
+      if (!email) {
+          toast({ title: 'Error', description: 'No email address found. Please go back to login.', variant: 'destructive'});
+          return;
+      }
+    setIsResending(true);
+    // User might not be logged in here if they refreshed the page.
+    // We can't send a verification email without a signed-in user.
+    // So, if no user, we can't proceed. Best to guide them back to login.
+    if (auth.currentUser && auth.currentUser.email === email) {
       try {
         await sendEmailVerification(auth.currentUser);
         toast({ title: 'Success', description: 'Verification email sent!' });
-      } catch (error) {
+      } catch (error: any) {
         console.error(error);
-        toast({ title: 'Error', description: 'Failed to send verification email.', variant: 'destructive' });
+        let description = 'Failed to send verification email.';
+        if (error.code === 'auth/too-many-requests') {
+            description = 'You have requested to resend the email too many times. Please wait a few minutes before trying again.';
+        }
+        toast({ title: 'Error', description, variant: 'destructive' });
+      } finally {
+        setIsResending(false);
       }
     } else {
-        toast({ title: 'Error', description: 'You are not logged in. Please log in to resend the verification email.', variant: 'destructive' });
-        router.push('/login');
+        // If there's no user, or the user is not the one we're trying to verify,
+        // we can't resend. Guide them to log in again.
+        toast({ title: 'Please Login', description: 'To resend the verification email, please log in first.', variant: 'destructive' });
+        router.push(`/login?email=${email}`);
     }
   };
 
@@ -76,8 +95,8 @@ function VerifyEmailContent() {
           <p className="text-center text-sm text-muted-foreground">
             Didn&apos;t receive an email?
           </p>
-          <Button onClick={handleResend}>
-            Resend Verification Link
+          <Button onClick={handleResend} disabled={isResending}>
+            {isResending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : 'Resend Verification Link'}
           </Button>
           <Button variant="outline" onClick={handleGoToLogin}>
             Back to Login
