@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
       setSuccess(true);
       toast({
         title: 'Check your email',
-        description: 'A password reset link has been sent to your email address.',
+        description: 'A password reset link has been sent. Be sure to check your spam folder!',
       });
     } catch (err: any) {
         if (err.code === 'auth/user-not-found') {
@@ -54,8 +54,9 @@ export default function ForgotPasswordPage() {
         </CardHeader>
         <CardContent>
           {success ? (
-             <div className="text-center text-green-600">
+             <div className="text-center text-green-600 space-y-2">
                 <p>A password reset link has been sent to your email. Please check your inbox.</p>
+                <p className="text-sm text-muted-foreground">Be sure to check your spam folder if you don't see it.</p>
              </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
