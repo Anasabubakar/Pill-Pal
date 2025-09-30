@@ -1,6 +1,5 @@
 'use client';
 
-import { useTheme } from 'next-themes';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { app } from '@/lib/firebase';
 
 const profileSchema = z.object({
@@ -34,7 +32,6 @@ type ProfileFormInputs = z.infer<typeof profileSchema>;
 type PasswordFormInputs = z.infer<typeof passwordSchema>;
 
 export function SettingsForm() {
-  const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const { toast } = useToast();
   const auth = getAuth();
@@ -136,26 +133,7 @@ export function SettingsForm() {
           </form>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>Customize the look and feel of the app.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="dark-mode" className="text-base">
-              Dark Mode
-            </Label>
-            <Switch
-              id="dark-mode"
-              checked={theme === 'dark'}
-              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
+      
       <Card>
         <CardHeader>
             <CardTitle>Change Password</CardTitle>

@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Moon, Sun } from 'lucide-react';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -17,11 +16,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTheme } from 'next-themes';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 export function UserNav() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const auth = getAuth();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -68,7 +71,7 @@ export function UserNav() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal md:hidden">
+        <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
               {loading ? 'Loading...' : user?.displayName || 'User'}
@@ -78,17 +81,28 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="md:hidden" />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="flex items-center justify-between" onSelect={(e) => e.preventDefault()}>
+            <div className="flex items-center gap-2">
+              {theme === 'light' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <Label htmlFor="dark-mode" className="cursor-pointer">Dark Mode</Label>
+            </div>
+            <Switch
+              id="dark-mode"
+              checked={theme === 'dark'}
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            />
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard/settings">
             <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+            <span>Preferences</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>Sign Out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
