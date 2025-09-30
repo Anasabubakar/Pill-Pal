@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { getAuth, updateProfile, reauthenticateWithCredential, EmailAuthProvider, updatePassword, type AuthError } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,7 +61,7 @@ export function SettingsForm() {
       });
 
       const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, { displayName: newDisplayName });
+      await setDoc(userDocRef, { displayName: newDisplayName }, { merge: true });
 
       toast({ title: 'Success', description: 'Your profile has been updated.' });
     } catch (error) {
