@@ -32,43 +32,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (loading) {
-      return;
+      return; // Do nothing until authentication state is determined
     }
 
     const isPublicPage = publicRoutes.includes(pathname);
     const isVerificationPage = pathname === verificationRoute;
 
     if (user) {
+      // User is logged in
       if (!user.emailVerified && !isVerificationPage) {
+        // and not verified, and not on verification page -> redirect to verify
         router.push(`${verificationRoute}?email=${user.email}`);
       } else if (user.emailVerified && isPublicPage) {
+        // and verified, but on a public page -> redirect to dashboard
         router.push('/dashboard');
       }
     } else {
+      // No user is logged in
       if (!isPublicPage) {
+        // and not on a public page -> redirect to login
         router.push('/login');
       }
     }
   }, [user, loading, pathname, router]);
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
   const isPublicPage = publicRoutes.includes(pathname);
-  if (!isPublicPage && !user) {
-    // On a protected page, but no user. Redirect is happening. Show loader.
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-  
-  if (user && user.emailVerified && isPublicPage) {
-    // On a public page, but user is logged in. Redirect is happening. Show loader.
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
 
-  if (user && !user.emailVerified && pathname !== verificationRoute) {
-    // User is not verified and not on the verification page. Redirect is happening.
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  // If we are loading, or if we are in a redirect state, show a full-screen loader.
+  if (loading || (!user && !isPublicPage) || (user && user.emailVerified && isPublicPage) || (user && !user.emailVerified && pathname !== verificationRoute)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
   }
 
   return (

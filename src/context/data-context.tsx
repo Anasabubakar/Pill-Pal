@@ -22,7 +22,6 @@ interface DataContextType {
   medications: Medication[];
   logs: Log[];
   todaysMedications: Medication[];
-  loadingData: boolean;
   addMedication: (med: MedicationInput) => Promise<void>;
   updateMedication: (med: Medication) => Promise<void>;
   deleteMedication: (id: string) => Promise<void>;
@@ -33,18 +32,20 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const db = getFirestore(app);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading || !user) {
-      setLoadingData(authLoading);
-      return;
+    // Only proceed if there is a user. The AuthProvider already handled the loading state for the user object.
+    if (!user) {
+        // If there's no user, there's no data to load.
+        setIsDataLoading(false);
+        return;
     }
 
-    setLoadingData(true);
+    setIsDataLoading(true);
     const medsQuery = query(collection(db, 'users', user.uid, 'medications'));
     const logsQuery = query(collection(db, 'users', user.uid, 'logs'));
 
@@ -52,7 +53,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const items: Medication[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        const item = { id: doc.id, ...data };
+        const item: { [key: string]: any } = { id: doc.id, ...data };
         // Convert Firestore Timestamps to JS Dates
         for (const key in item) {
           if (item[key] instanceof Timestamp) {
@@ -62,17 +63,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
         items.push(item as Medication);
       });
       setMedications(items);
-      setLoadingData(false);
+      // Data is loaded once we get the first snapshot.
+      if(isDataLoading) setIsDataLoading(false); 
     }, (error) => {
       console.error("Error fetching medications:", error);
-      setLoadingData(false);
+      setIsDataLoading(false);
     });
 
     const unsubLogs = onSnapshot(logsQuery, (querySnapshot) => {
       const items: Log[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        const item = { id: doc.id, ...data };
+        const item: { [key: string]: any } = { id: doc.id, ...data };
          // Convert Firestore Timestamps to JS Dates
         for (const key in item) {
           if (item[key] instanceof Timestamp) {
@@ -90,11 +92,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       unsubMeds();
       unsubLogs();
     };
-  }, [user, authLoading]);
+  }, [user]); // The effect now solely depends on the user object.
 
-  // If either the auth state is loading or the initial data fetch is loading, show a loader.
-  // This is the primary gatekeeper for the rest of the application.
-  if (authLoading || loadingData) {
+  // The AuthProvider handles the main loading state. We only show this loader
+  // for the brief moment data is being fetched AFTER auth is confirmed.
+  if (isDataLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
@@ -139,7 +141,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         medications,
         logs,
         todaysMedications,
-        loadingData: loadingData,
         addMedication,
         updateMedication,
         deleteMedication,
