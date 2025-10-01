@@ -155,6 +155,3 @@ export function AIChat() {
     </div>
   );
 }
-
-// Rename the default export for clarity
-export { AIChat };
