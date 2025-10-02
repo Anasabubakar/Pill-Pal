@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="flex h-screen w-full bg-background font-body overflow-hidden">
           <SidebarNav />
           <div className="flex flex-1 flex-col overflow-auto">
-             <header className="flex h-14 items-center gap-4 border-b bg-card px-6 md:hidden sticky top-0 z-10">
+             <header className="flex h-14 shrink-0 items-center gap-4 border-b bg-card px-6 md:hidden sticky top-0 z-10">
                 <MobileNav />
                  <div className="flex items-center gap-2">
                     <Logo className="h-6 w-6 text-primary" />
